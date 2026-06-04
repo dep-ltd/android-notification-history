@@ -15,7 +15,7 @@ import com.notificationhistory.security.AppSessionManager
 import com.notificationhistory.security.AuthManager
 import com.notificationhistory.security.BiometricGate
 import com.notificationhistory.ui.detail.DetailScreen
-import com.notificationhistory.ui.feed.FeedScreen
+import com.notificationhistory.ui.adaptive.MainAppScaffold
 import com.notificationhistory.ui.feed.FeedViewModel
 import com.notificationhistory.ui.lock.LockScreen
 import com.notificationhistory.ui.lock.PinSetupScreen
@@ -158,16 +158,9 @@ fun AppNavGraph(
                     }
                 }
             }
-            FeedScreen(
-                viewModel = feedViewModel,
-                onNotificationClick = { id -> navController.navigate("detail/$id") },
-                onOpenSettings = { navController.navigate("settings") }
-            )
-        }
-        composable("settings") {
-            SettingsScreen(
-                onBack = { navController.popBackStack() },
-                onOpenAppPicker = { navController.navigate("app_picker") },
+            MainAppScaffold(
+                navController = navController,
+                feedViewModel = feedViewModel,
                 authManager = authManager,
                 activity = activity
             )

@@ -36,7 +36,9 @@ import java.util.Locale
 fun FeedScreen(
     viewModel: FeedViewModel,
     onNotificationClick: (Long) -> Unit,
-    onOpenSettings: () -> Unit
+    onOpenSettings: () -> Unit,
+    modifier: Modifier = Modifier,
+    showSettingsInTopBar: Boolean = true
 ) {
     val feedItems by viewModel.feedItems.collectAsState()
     val packages by viewModel.availablePackages.collectAsState()
@@ -44,15 +46,18 @@ fun FeedScreen(
     var searchText by remember { mutableStateOf("") }
 
     Scaffold(
+        modifier = modifier,
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.feed_title)) },
                 actions = {
-                    IconButton(onClick = onOpenSettings) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = stringResource(R.string.settings_title)
-                        )
+                    if (showSettingsInTopBar) {
+                        IconButton(onClick = onOpenSettings) {
+                            Icon(
+                                imageVector = Icons.Default.Settings,
+                                contentDescription = stringResource(R.string.settings_title)
+                            )
+                        }
                     }
                 }
             )

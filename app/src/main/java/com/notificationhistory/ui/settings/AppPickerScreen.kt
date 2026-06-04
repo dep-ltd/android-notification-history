@@ -17,31 +17,15 @@ import com.notificationhistory.R
 @Composable
 fun AppPickerScreen(
     onBack: () -> Unit,
+    showTopBar: Boolean = true,
+    embedded: Boolean = false,
     viewModel: AppPickerViewModel = hiltViewModel()
 ) {
     val apps by viewModel.apps.collectAsState()
     var search by remember { mutableStateOf("") }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.app_picker_title)) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.detail_back)
-                        )
-                    }
-                }
-            )
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
+    val content: @Composable (Modifier) -> Unit = { contentModifier ->
+        Column(modifier = contentModifier.fillMaxSize()) {
             OutlinedTextField(
                 value = search,
                 onValueChange = {
@@ -74,6 +58,35 @@ fun AppPickerScreen(
                     HorizontalDivider()
                 }
             }
+        }
+    }
+
+    if (showTopBar) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text(stringResource(R.string.app_picker_title)) },
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(R.string.detail_back)
+                            )
+                        }
+                    }
+                )
+            }
+        ) { padding -> content(Modifier.padding(padding)) }
+    } else {
+        Column(modifier = Modifier.fillMaxSize().padding(if (embedded) 0.dp else 16.dp)) {
+            if (embedded) {
+                Text(
+                    text = stringResource(R.string.app_picker_title),
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+            content(Modifier)
         }
     }
 }

@@ -17,7 +17,10 @@
     <string name="feed_search_hint">Пошук у журналі</string>
     <string name="feed_filter_all">Усі додатки</string>
 
+    <string name="detail_select_prompt">Оберіть сповіщення</string>
     <string name="detail_title">Деталі</string>
+    <string name="nav_feed">Журнал</string>
+    <string name="nav_settings">Налаштування</string>
     <string name="detail_back">Назад</string>
     <string name="detail_app_icon">Іконка додатку</string>
     <string name="detail_image">Зображення вкладення</string>
