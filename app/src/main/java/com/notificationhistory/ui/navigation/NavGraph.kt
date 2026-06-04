@@ -16,6 +16,8 @@ import com.notificationhistory.ui.feed.FeedScreen
 import com.notificationhistory.ui.feed.FeedViewModel
 import com.notificationhistory.ui.lock.LockScreen
 import com.notificationhistory.ui.permission.PermissionScreen
+import com.notificationhistory.ui.settings.AppPickerScreen
+import com.notificationhistory.ui.settings.SettingsScreen
 import com.notificationhistory.util.NotificationAccess
 
 @Composable
@@ -84,8 +86,18 @@ fun AppNavGraph(
                 viewModel = feedViewModel,
                 onNotificationClick = { id ->
                     navController.navigate("detail/$id")
-                }
+                },
+                onOpenSettings = { navController.navigate("settings") }
             )
+        }
+        composable("settings") {
+            SettingsScreen(
+                onBack = { navController.popBackStack() },
+                onOpenAppPicker = { navController.navigate("app_picker") }
+            )
+        }
+        composable("app_picker") {
+            AppPickerScreen(onBack = { navController.popBackStack() })
         }
         composable(
             route = "detail/{id}",

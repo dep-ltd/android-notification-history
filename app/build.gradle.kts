@@ -116,6 +116,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.material.icons.extended)
 
     implementation(libs.kotlinx.coroutines.android)
 
@@ -136,6 +137,8 @@ dependencies {
     // Navigation & Work
     implementation(libs.androidx.navigation.compose)
     implementation(libs.hilt.navigation.compose)
+    implementation(libs.androidx.datastore.preferences)
+    implementation(libs.coil.compose)
     implementation(libs.androidx.work.runtime.ktx)
 
     testImplementation(libs.junit)

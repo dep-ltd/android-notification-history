@@ -18,6 +18,18 @@ interface NotificationDao {
     @Query("SELECT * FROM notification_events WHERE stableKey = :key LIMIT 1")
     suspend fun getByStableKey(key: String): NotificationEvent?
 
+    @Query("SELECT * FROM notification_events WHERE id = :id LIMIT 1")
+    suspend fun getById(id: Long): NotificationEvent?
+
+    @Query(
+        """
+        SELECT * FROM notification_events
+        WHERE packageName = :packageName AND groupKey = :groupKey AND isGroupSummary = 1
+        LIMIT 1
+        """
+    )
+    suspend fun getSummaryByGroup(packageName: String, groupKey: String): NotificationEvent?
+
     @Update
     suspend fun update(event: NotificationEvent)
 

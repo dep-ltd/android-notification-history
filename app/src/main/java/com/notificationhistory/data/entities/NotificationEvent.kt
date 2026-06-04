@@ -17,5 +17,8 @@ data class NotificationEvent(
     val channelId: String?,
     val groupKey: String?,
     val isGroupSummary: Boolean = false,
-    val mediaPath: String? = null
+    val summaryId: Long? = null,
+    val eventType: String = NotificationEventType.POSTED.name,
+    val clickUri: String? = null,
+    val mediaPaths: List<String> = emptyList()
 )

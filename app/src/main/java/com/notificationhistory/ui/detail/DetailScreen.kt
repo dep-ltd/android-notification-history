@@ -1,19 +1,29 @@
 package com.notificationhistory.ui.detail
 
-import androidx.compose.foundation.Image
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.notificationhistory.R
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -25,7 +35,7 @@ fun DetailScreen(
     viewModel: DetailViewModel = hiltViewModel()
 ) {
     val event by viewModel.notification.collectAsState()
-    val iconBitmap by viewModel.iconBitmap.collectAsState()
+    val context = LocalContext.current
 
     Scaffold(
         topBar = {
@@ -46,7 +56,7 @@ fun DetailScreen(
         if (item == null) {
             Box(
                 modifier = Modifier.fillMaxSize().padding(padding),
-                contentAlignment = androidx.compose.ui.Alignment.Center
+                contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator()
             }
@@ -60,12 +70,22 @@ fun DetailScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            iconBitmap?.let { bitmap ->
-                Image(
-                    bitmap = bitmap.asImageBitmap(),
-                    contentDescription = stringResource(R.string.detail_app_icon),
-                    modifier = Modifier.size(64.dp)
-                )
+            if (item.mediaPaths.isNotEmpty()) {
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(item.mediaPaths, key = { it }) { path ->
+                        AsyncImage(
+                            model = ImageRequest.Builder(context)
+                                .data(Uri.fromFile(File(path)))
+                                .crossfade(true)
+                                .build(),
+                            contentDescription = stringResource(R.string.detail_image),
+                            modifier = Modifier
+                                .height(160.dp)
+                                .fillMaxWidth(0.6f),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+                }
             }
             Text(
                 text = item.appLabel ?: item.packageName,
@@ -80,11 +100,29 @@ fun DetailScreen(
                 text = formatDateTime(item.postedAt),
                 style = MaterialTheme.typography.labelMedium
             )
+            item.updatedAt?.let { updated ->
+                Text(
+                    text = stringResource(R.string.detail_updated_at, formatDateTime(updated)),
+                    style = MaterialTheme.typography.labelSmall
+                )
+            }
             item.channelId?.let { channel ->
                 Text(
                     text = stringResource(R.string.detail_channel, channel),
                     style = MaterialTheme.typography.bodySmall
                 )
+            }
+            item.clickUri?.let { uri ->
+                TextButton(
+                    onClick = {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(uri))
+                        ContextCompat.startActivity(context, intent, null)
+                    }
+                ) {
+                    Icon(Icons.Default.OpenInNew, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(stringResource(R.string.detail_open_link))
+                }
             }
             HorizontalDivider()
             Text(

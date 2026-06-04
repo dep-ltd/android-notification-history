@@ -16,7 +16,10 @@ import org.robolectric.annotation.Config
 @Config(sdk = [34])
 class NotificationParserTest {
 
-    private val parser = NotificationParser(MediaStorage(ApplicationProvider.getApplicationContext<Application>()))
+    private val parser = NotificationParser(
+        ApplicationProvider.getApplicationContext(),
+        MediaStorage(ApplicationProvider.getApplicationContext<Application>())
+    )
 
     @Test
     fun parseExtras_readsExtraTitleAndText() {
@@ -45,5 +48,13 @@ class NotificationParserTest {
             "com.example.app:0|com.example.app|123",
             NotificationParser.stableKey("com.example.app", "0|com.example.app|123")
         )
+    }
+
+    @Test
+    fun parseClickUri_extractsHttpFromText() {
+        val extras = Bundle().apply {
+            putCharSequence(android.app.Notification.EXTRA_TEXT, "See https://example.com/page")
+        }
+        assertEquals("https://example.com/page", parser.parseClickUri(extras))
     }
 }

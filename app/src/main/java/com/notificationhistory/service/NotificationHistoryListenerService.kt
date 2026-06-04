@@ -1,6 +1,5 @@
 package com.notificationhistory.service
 
-import android.content.Context
 import android.graphics.Bitmap
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
@@ -59,14 +58,8 @@ class NotificationHistoryListenerService : NotificationListenerService() {
         if (settingsManager.isBlacklisted(sbn.packageName)) return
 
         val event = parser.parse(
-            packageName = sbn.packageName,
-            notificationKey = sbn.key,
-            postedAt = sbn.postTime,
-            extras = sbn.notification.extras,
+            sbn = sbn,
             appLabel = resolveAppLabel(sbn.packageName),
-            channelId = sbn.notification.channelId,
-            groupKey = sbn.groupKey,
-            isGroupSummary = sbn.notification.flags and android.app.Notification.FLAG_GROUP_SUMMARY != 0,
             smallIconBitmap = extractSmallIconBitmap(sbn)
         )
 

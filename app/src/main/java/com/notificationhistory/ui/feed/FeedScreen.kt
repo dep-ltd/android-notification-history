@@ -1,38 +1,60 @@
 package com.notificationhistory.ui.feed
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.notificationhistory.R
 import com.notificationhistory.data.entities.NotificationEvent
-import androidx.compose.ui.res.stringResource
+import com.notificationhistory.data.models.FeedListItem
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FeedScreen(
     viewModel: FeedViewModel,
-    onNotificationClick: (Long) -> Unit
+    onNotificationClick: (Long) -> Unit,
+    onOpenSettings: () -> Unit
 ) {
-    val notifications by viewModel.notifications.collectAsState()
+    val feedItems by viewModel.feedItems.collectAsState()
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text(stringResource(R.string.feed_title)) })
+            TopAppBar(
+                title = { Text(stringResource(R.string.feed_title)) },
+                actions = {
+                    IconButton(onClick = onOpenSettings) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = stringResource(R.string.settings_title)
+                        )
+                    }
+                }
+            )
         }
     ) { padding ->
-        if (notifications.isEmpty()) {
-            Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = androidx.compose.ui.Alignment.Center) {
+        if (feedItems.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize().padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
                 Text(stringResource(R.string.feed_empty))
             }
         } else {
@@ -41,11 +63,97 @@ fun FeedScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(notifications, key = { it.id }) { event ->
-                    NotificationItem(
-                        event = event,
-                        onClick = { onNotificationClick(event.id) }
-                    )
+                items(
+                    items = feedItems,
+                    key = { item ->
+                        when (item) {
+                            is FeedListItem.Single -> "single-${item.event.id}"
+                            is FeedListItem.Group -> "group-${item.groupKey}"
+                        }
+                    }
+                ) { item ->
+                    when (item) {
+                        is FeedListItem.Single -> NotificationItem(
+                            event = item.event,
+                            onClick = { onNotificationClick(item.event.id) }
+                        )
+                        is FeedListItem.Group -> GroupFeedItem(
+                            item = item,
+                            onToggle = { viewModel.toggleGroup(item.groupKey) },
+                            onSummaryClick = item.summary?.let { summary ->
+                                { onNotificationClick(summary.id) }
+                            },
+                            onChildClick = onNotificationClick
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun GroupFeedItem(
+    item: FeedListItem.Group,
+    onToggle: () -> Unit,
+    onSummaryClick: (() -> Unit)?,
+    onChildClick: (Long) -> Unit
+) {
+    val display = item.summary ?: item.children.firstOrNull() ?: return
+    val childCount = item.children.size
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(enabled = onSummaryClick != null, onClick = { onSummaryClick?.invoke() }),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    NotificationItemContent(display)
+                    if (childCount > 0) {
+                        Text(
+                            text = stringResource(R.string.feed_group_count, childCount),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                if (childCount > 0) {
+                    IconButton(onClick = onToggle) {
+                        Icon(
+                            imageVector = if (item.isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                            contentDescription = stringResource(
+                                if (item.isExpanded) R.string.feed_collapse_group else R.string.feed_expand_group
+                            )
+                        )
+                    }
+                }
+            }
+            AnimatedVisibility(visible = item.isExpanded && childCount > 0) {
+                Column(
+                    modifier = Modifier.padding(top = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    item.children.forEach { child ->
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onChildClick(child.id) },
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant
+                            )
+                        ) {
+                            Box(modifier = Modifier.padding(12.dp)) {
+                                NotificationItemContent(child)
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -63,28 +171,45 @@ fun NotificationItem(
             .clickable(onClick = onClick),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(
-                    text = event.appLabel ?: event.packageName,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Text(
-                    text = formatTime(event.postedAt),
-                    style = MaterialTheme.typography.labelSmall
-                )
-            }
-            Spacer(modifier = Modifier.height(4.dp))
+        Box(modifier = Modifier.padding(16.dp)) {
+            NotificationItemContent(event)
+        }
+    }
+}
+
+@Composable
+private fun NotificationItemContent(event: NotificationEvent) {
+    val removed = event.removedAt != null
+    Column {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text(
-                text = event.title ?: "No Title",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                text = event.appLabel ?: event.packageName,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary
             )
             Text(
-                text = event.text ?: "No Text",
-                style = MaterialTheme.typography.bodyMedium,
-                maxLines = 2
+                text = formatTime(event.postedAt),
+                style = MaterialTheme.typography.labelSmall
+            )
+        }
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = event.title ?: stringResource(R.string.detail_no_title),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            textDecoration = if (removed) TextDecoration.LineThrough else null
+        )
+        Text(
+            text = event.text ?: stringResource(R.string.detail_no_text),
+            style = MaterialTheme.typography.bodyMedium,
+            maxLines = 2,
+            textDecoration = if (removed) TextDecoration.LineThrough else null
+        )
+        if (event.eventType == "UPDATED") {
+            Text(
+                text = stringResource(R.string.feed_updated_badge),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.tertiary
             )
         }
     }

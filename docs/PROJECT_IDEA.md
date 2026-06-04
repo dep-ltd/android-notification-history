@@ -341,13 +341,13 @@ Gradle (`build.gradle.kts`):
 
 **Ціль:** коректна поведінка як у системної шторки.
 
-- [ ] `stableKey` upsert: POSTED vs UPDATED
-- [ ] `onNotificationRemoved` → `removedAt`
-- [ ] Group key: summary + children, UI expand/collapse
-- [ ] Збереження `largeIcon` / BigPicture (стиснення, ліміт розміру)
-- [ ] Detail: галерея зображень (Coil), показ `clickUri` (відкриття через `CustomTabs` **без** INTERNET permission — використати `Intent.ACTION_VIEW` лише на user tap, optional feature flag)
-- [ ] Blacklist: DataStore + filter у repository
-- [ ] Settings screen: список installed apps + search
+- [x] `stableKey` upsert: POSTED vs UPDATED
+- [x] `onNotificationRemoved` → `removedAt`
+- [x] Group key: summary + children, UI expand/collapse
+- [x] Збереження `largeIcon` / BigPicture (стиснення, ліміт розміру)
+- [x] Detail: галерея зображень (Coil), показ `clickUri` (відкриття через `CustomTabs` **без** INTERNET permission — використати `Intent.ACTION_VIEW` лише на user tap, optional feature flag)
+- [x] Blacklist: DataStore + filter у repository
+- [x] Settings screen: список installed apps + search
 
 **Критерій:** груповий чат не дублює 50 рядків; оновлення одного message id оновлює запис.
 

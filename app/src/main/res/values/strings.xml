@@ -9,11 +9,26 @@
 
     <string name="feed_title">Notification History</string>
     <string name="feed_empty">No notifications yet. Grant access and trigger a test notification.</string>
+    <string name="feed_group_count">%1$d messages in group</string>
+    <string name="feed_expand_group">Expand group</string>
+    <string name="feed_collapse_group">Collapse group</string>
+    <string name="feed_updated_badge">Updated</string>
 
     <string name="detail_title">Details</string>
     <string name="detail_back">Back</string>
     <string name="detail_app_icon">App icon</string>
+    <string name="detail_image">Attachment image</string>
     <string name="detail_channel">Channel: %1$s</string>
     <string name="detail_no_title">No title</string>
     <string name="detail_no_text">No text</string>
+    <string name="detail_open_link">Open link</string>
+    <string name="detail_updated_at">Updated: %1$s</string>
+
+    <string name="settings_title">Settings</string>
+    <string name="settings_section_apps">Apps</string>
+    <string name="settings_ignore_apps">Ignore apps</string>
+    <string name="settings_ignore_apps_hint">Notifications from selected apps will not be saved.</string>
+
+    <string name="app_picker_title">Ignore apps</string>
+    <string name="app_picker_search">Search apps</string>
 </resources>

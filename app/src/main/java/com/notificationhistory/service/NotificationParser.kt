@@ -1,12 +1,17 @@
 package com.notificationhistory.service
 
 import android.app.Notification
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.drawable.Drawable
+import android.graphics.drawable.Icon
+import android.os.Build
 import android.os.Bundle
+import android.service.notification.StatusBarNotification
 import com.notificationhistory.data.entities.NotificationEvent
 import com.notificationhistory.util.MediaStorage
+import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -17,6 +22,7 @@ data class ParsedNotificationFields(
 
 @Singleton
 class NotificationParser @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val mediaStorage: MediaStorage
 ) {
 
@@ -27,49 +33,94 @@ class NotificationParser @Inject constructor(
     }
 
     fun parse(
-        packageName: String,
-        notificationKey: String,
-        postedAt: Long,
-        extras: Bundle,
+        sbn: StatusBarNotification,
         appLabel: String?,
-        channelId: String?,
-        groupKey: String?,
-        isGroupSummary: Boolean,
         smallIconBitmap: Bitmap?
     ): NotificationEvent {
+        val notification = sbn.notification
+        val extras = notification.extras
         val fields = parseExtras(extras)
-        val iconPath = smallIconBitmap?.let { mediaStorage.saveBitmap(it) }
+        val mediaPaths = buildMediaPaths(context, extras, notification, smallIconBitmap)
 
         return NotificationEvent(
-            stableKey = stableKey(packageName, notificationKey),
-            packageName = packageName,
+            stableKey = stableKey(sbn.packageName, sbn.key),
+            packageName = sbn.packageName,
             appLabel = appLabel,
-            postedAt = postedAt,
+            postedAt = sbn.postTime,
             title = fields.title,
             text = fields.text,
-            channelId = channelId,
-            groupKey = groupKey,
-            isGroupSummary = isGroupSummary,
-            mediaPath = iconPath
+            channelId = notification.channelId,
+            groupKey = sbn.groupKey,
+            isGroupSummary = notification.flags and Notification.FLAG_GROUP_SUMMARY != 0,
+            clickUri = parseClickUri(extras),
+            mediaPaths = mediaPaths
         )
     }
 
-    fun cacheIcon(bitmap: Bitmap?): String? {
-        return bitmap?.let { mediaStorage.saveBitmap(it) }
+    fun cacheIcon(bitmap: Bitmap?): String? = bitmap?.let { mediaStorage.saveBitmap(it) }
+
+    private fun buildMediaPaths(
+        context: Context,
+        extras: Bundle,
+        notification: Notification,
+        smallIconBitmap: Bitmap?
+    ): List<String> {
+        val paths = mutableListOf<String>()
+        smallIconBitmap?.let { mediaStorage.saveBitmap(it) }?.let { paths.add(it) }
+
+        @Suppress("DEPRECATION")
+        val legacyLargeIcon = extras.getParcelable<Bitmap>(Notification.EXTRA_LARGE_ICON)
+        legacyLargeIcon?.let { mediaStorage.saveBitmap(it) }?.let { paths.add(it) }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            notification.getLargeIcon()?.let { icon ->
+                bitmapFromIcon(icon, context)?.let { mediaStorage.saveBitmap(it) }
+            }?.let { paths.add(it) }
+        }
+
+        val bigPicture = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            extras.getParcelable(Notification.EXTRA_PICTURE, Bitmap::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            extras.getParcelable(Notification.EXTRA_PICTURE)
+        }
+        bigPicture?.let { mediaStorage.saveBitmap(it) }?.let { paths.add(it) }
+
+        return paths.distinct()
+    }
+
+    fun parseClickUri(extras: Bundle): String? {
+        val text = extras.getCharSequence(Notification.EXTRA_TEXT)?.toString()
+        return extractHttpUri(text)
+            ?: extras.getCharSequence(Notification.EXTRA_BIG_TEXT)?.toString()?.let { extractHttpUri(it) }
+    }
+
+    private fun extractHttpUri(value: String?): String? {
+        if (value.isNullOrBlank()) return null
+        val trimmed = value.trim()
+        if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) return trimmed
+        return HTTP_URI_REGEX.find(trimmed)?.value
     }
 
     companion object {
+        private val HTTP_URI_REGEX = Regex("https?://\\S+")
+
         fun stableKey(packageName: String, notificationKey: String): String =
             "$packageName:$notificationKey"
 
-        fun bitmapFromDrawable(drawable: Drawable, size: Int = drawable.intrinsicWidth.coerceAtLeast(1)): Bitmap {
-            val width = if (drawable.intrinsicWidth > 0) drawable.intrinsicWidth else size
-            val height = if (drawable.intrinsicHeight > 0) drawable.intrinsicHeight else size
+        fun bitmapFromDrawable(drawable: Drawable): Bitmap {
+            val width = drawable.intrinsicWidth.coerceAtLeast(1)
+            val height = drawable.intrinsicHeight.coerceAtLeast(1)
             val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
             val canvas = Canvas(bitmap)
             drawable.setBounds(0, 0, canvas.width, canvas.height)
             drawable.draw(canvas)
             return bitmap
+        }
+
+        fun bitmapFromIcon(icon: Icon, context: android.content.Context): Bitmap? {
+            val drawable = icon.loadDrawable(context) ?: return null
+            return bitmapFromDrawable(drawable)
         }
     }
 }
