@@ -31,4 +31,29 @@
 
     <string name="app_picker_title">Ignore apps</string>
     <string name="app_picker_search">Search apps</string>
+
+    <string name="consent_title">Security policy</string>
+    <string name="consent_body">After 10 failed unlock attempts (PIN or biometric), all notification history, media, and keys will be permanently deleted on this device.</string>
+    <string name="consent_continue">Continue</string>
+    <string name="pin_setup_wipe_consent">I understand that 10 failed unlock attempts will permanently erase all app data.</string>
+    <string name="pin_setup_create">Create a 6-digit PIN</string>
+    <string name="pin_setup_confirm">Confirm your PIN</string>
+    <string name="pin_setup_mismatch">PINs do not match. Try again.</string>
+
+    <string name="lock_enter_pin">Enter PIN</string>
+    <string name="lock_attempts_left">Attempts left: %1$d</string>
+    <string name="lock_use_biometric">Use biometric</string>
+
+    <string name="biometric_title">Unlock Notification History</string>
+    <string name="biometric_subtitle">Confirm your identity</string>
+    <string name="biometric_use_pin">Use PIN</string>
+
+    <string name="wipe_complete_title">Data erased</string>
+    <string name="wipe_complete_body">All notification history and encryption keys were destroyed after too many failed unlock attempts. Set up a new PIN to continue.</string>
+    <string name="wipe_complete_continue">Set up again</string>
+
+    <string name="settings_section_security">Security</string>
+    <string name="settings_biometric">Unlock with biometric</string>
+    <string name="settings_biometric_hint">Use fingerprint or face when available.</string>
+    <string name="settings_biometric_unavailable">Biometric unlock is not available on this device.</string>
 </resources>

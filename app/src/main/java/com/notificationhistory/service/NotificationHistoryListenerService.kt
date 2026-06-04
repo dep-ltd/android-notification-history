@@ -5,6 +5,7 @@ import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import com.notificationhistory.data.preferences.SettingsManager
 import com.notificationhistory.data.repository.NotificationRepository
+import com.notificationhistory.security.AuthManager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -23,6 +24,9 @@ class NotificationHistoryListenerService : NotificationListenerService() {
 
     @Inject
     lateinit var settingsManager: SettingsManager
+
+    @Inject
+    lateinit var authManager: AuthManager
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -55,6 +59,7 @@ class NotificationHistoryListenerService : NotificationListenerService() {
     }
 
     private fun handleNotification(sbn: StatusBarNotification) {
+        if (!authManager.isPinSet()) return
         if (settingsManager.isBlacklisted(sbn.packageName)) return
 
         val event = parser.parse(

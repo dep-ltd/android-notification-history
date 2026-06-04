@@ -1,6 +1,6 @@
 package com.notificationhistory.data.repository
 
-import com.notificationhistory.data.dao.NotificationDao
+import com.notificationhistory.data.DatabaseHolder
 import com.notificationhistory.data.entities.NotificationEvent
 import com.notificationhistory.data.entities.NotificationEventType
 import com.notificationhistory.data.preferences.SettingsManager
@@ -12,9 +12,11 @@ import javax.inject.Singleton
 
 @Singleton
 class NotificationRepository @Inject constructor(
-    private val notificationDao: NotificationDao,
+    private val databaseHolder: DatabaseHolder,
     private val settingsManager: SettingsManager
 ) {
+    private val notificationDao get() = databaseHolder.get().notificationDao()
+
     val allNotifications: Flow<List<NotificationEvent>> = settingsManager.blacklistFlow
         .flatMapLatest { blacklist ->
             notificationDao.getAllNotifications().map { events ->

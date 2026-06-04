@@ -357,16 +357,16 @@ Gradle (`build.gradle.kts`):
 
 **Ціль:** дані at rest і lock screen.
 
-- [ ] SQLCipher інтеграція + міграція Room
-- [ ] Android Keystore: генерація passphrase при першому PIN
-- [ ] PIN setup / verify UI (custom numpad)
-- [ ] `BiometricPrompt` для unlock і опційно re-key
-- [ ] `LockScreen` gate: NavHost з start destination = Lock until unlocked
-- [ ] Timeout background lock (Lifecycle + `ProcessLifecycleOwner`)
-- [ ] Optional `FLAG_SECURE`
-- [ ] `failedUnlockAttempts`: спільний лічильник PIN + біометрія; UI «N спроб залишилось»
-- [ ] `WipeAllDataUseCase` на 10-й невдачі (БД, файли, prefs, Keystore)
-- [ ] Онбординг: згода з політикою стирання; екран після wipe
+- [x] SQLCipher інтеграція + міграція Room
+- [x] Android Keystore: генерація passphrase при першому PIN
+- [x] PIN setup / verify UI (custom numpad)
+- [x] `BiometricPrompt` для unlock і опційно re-key
+- [x] `LockScreen` gate: NavHost з start destination = Lock until unlocked
+- [x] Timeout background lock (Lifecycle + `ProcessLifecycleOwner`)
+- [x] Optional `FLAG_SECURE`
+- [x] `failedUnlockAttempts`: спільний лічильник PIN + біометрія; UI «N спроб залишилось»
+- [x] `WipeAllDataUseCase` на 10-й невдачі (БД, файли, prefs, Keystore)
+- [x] Онбординг: згода з політикою стирання; екран після wipe
 
 **Критерій:** 10 невірних PIN підряд знищують дані і повертають на setup; біометрія теж інкрементує лічильник; на root-пристрої feed недоступний.
 

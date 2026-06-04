@@ -2,33 +2,33 @@
 
 **Офлайн, відкритий код, приватний журнал push-нотіфікацій Android.**
 
-Додаток перехоплює нотіфікації всіх установлених програм (через `NotificationListenerService`), зберігає їх у **зашифрованій** локальній базі даних разом із зображеннями та посиланнями, і показує єдиний хронологічний лог на головному екрані. **Інтернет не використовується** — ні для збору, ні для синхронізації, ні для аналітики.
+Додаток перехоплює нотіфікації всіх установлених програм (через `NotificationListenerService`), зберігає їх у **зашифрованій** локальній базі даних (SQLCipher + Android Keystore) разом із зображеннями та посиланнями, і показує єдиний хронологічний лог на головному екрані. **Інтернет не використовується** — ні для збору, ні для синхронізації, ні для аналітики.
 
 | | |
 |---|---|
-| Платформа | Android (мін. API 26+, target — останній stable SDK) |
+| Платформа | Android (мін. API 26+, target SDK 34) |
 | UI | Jetpack Compose + Material 3 |
-| Дані | Room + SQLCipher (або Room + EncryptedFile для вкладень) |
-| Доступ до журналу | Біометрія або 6-значний PIN (власна клавіатура) |
+| Дані | Room + SQLCipher, DataStore, локальні медіа |
+| Доступ до журналу | Біометрія або 6-значний PIN (власна numpad) |
 | Захист від підбору | 10 невдалих спроб (PIN або біометрія) → повне стирання даних |
-| Root | Додаток **не працює** на рутованих пристроях; показує попередження |
-| Ліцензія | Apache 2.0 (рекомендовано для Play Store) |
+| Root | Додаток **не працює** на рутованих пристроях |
+| Ліцензія | Apache 2.0 |
 
-Повний опис продукту, архітектури та **пофазовий план імплементації** — у [`docs/PROJECT_IDEA.md`](docs/PROJECT_IDEA.md).
+Повний опис продукту, архітектури та **пофазовий план** — у [`docs/PROJECT_IDEA.md`](docs/PROJECT_IDEA.md).
+
+**Стан імплементації:** фази **0–3** реалізовані в `main` (фундамент, listener/feed, групи/медіа/settings, шифрування та lock). Далі — фаза 4 (Play polish).
 
 ---
 
 ## Можливості
 
-- **Журнал нотіфікацій** — список усіх збережених подій з фільтрами за датою та додатком.
-- **Детальний перегляд** — іконка додатку, назва, package name, заголовок/текст, час, вкладення (картинки), deep links / intent URI.
-- **Групи та оновлення** — коректна обробка `groupKey`, summary vs children, `onNotificationPosted` / `onNotificationRemoved` / зміни через той самий `key`.
-- **Чорний список додатків** — у налаштуваннях вимкнути збереження для обраних package.
-- **Захист журналу** — BiometricPrompt + PIN на кастомній numpad (без системної клавіатури).
-- **Анти-підбір** — спільний лічильник невдалих спроб PIN і біометрії; після **10** помилок — безповоротне видалення БД, медіа, налаштувань і ключів (див. [`docs/PROJECT_IDEA.md` §5.4.1](docs/PROJECT_IDEA.md)).
-- **Без root** — на рутованому пристрої додаток не запускає listener і не показує журнал; лише екран попередження з поясненням.
-- **Шифрування at rest** — БД і чутливі файли; ключі не вшиваються в репозиторій (див. `.env`).
-- **Великі екрани та fold** (фаза 6) — list-detail для журналу й деталей, master-detail для налаштувань за [Material adaptive layouts](https://developer.android.com/develop/ui/compose/layouts/adaptive).
+- **Журнал нотіфікацій** — хронологічний feed, групи з expand/collapse, оновлення за `stableKey`.
+- **Детальний перегляд** — текст, час, галерея зображень (Coil), посилання (`ACTION_VIEW` без `INTERNET`).
+- **Чорний список додатків** — DataStore + екран вибору з пошуком.
+- **Захист журналу** — PIN (6 цифр, custom numpad), опційна біометрія, `FLAG_SECURE`, автоблокування у фоні.
+- **Шифрування** — SQLCipher passphrase у EncryptedSharedPreferences / Keystore після створення PIN.
+- **Анти-підбір** — 10 невдалих спроб → `WipeAllDataUseCase` (БД, медіа, DataStore, ключі).
+- **Без root** — блокуючий екран попередження.
 
 ---
 
@@ -36,27 +36,27 @@
 
 - Android Studio Ladybug / останній stable
 - JDK 17+
-- Пристрій або емулятор з Google Play services **не обов’язкові** (додаток автономний)
+- Google Play services **не обов’язкові**
 
 ---
 
-## Швидкий старт (після появи модулів Gradle)
+## Швидкий старт
 
 ```bash
-git clone https://github.com/<your-org>/android-notification-history.git
+git clone https://github.com/dep-ltd/android-notification-history.git
 cd android-notification-history
 cp .env.example .env
-# Заповніть .env (див. docs/PROJECT_IDEA.md)
+# Опційно: DEBUG_DB_ENCRYPTION_KEY для debug-збірок
 ./gradlew assembleDebug
 ```
 
 На пристрої:
 
 1. Встановити APK.
-2. **Налаштування → Спеціальний доступ → Доступ до сповіщень** — увімкнути Notification History.
-3. Пристрій **не повинен бути рутований** — інакше додаток залишиться на екрані попередження.
-4. При першому запуску — створити PIN або увімкнути біометрію (з попередженням про стирання після 10 невдалих спроб).
-5. За потреби — виключити додатки в **Налаштування → Ігнорувати додатки**.
+2. **Спеціальний доступ → Доступ до сповіщень** — увімкнути Notification History.
+3. Пристрій **не рутований**.
+4. Прийняти політику стирання → створити PIN → розблокувати feed.
+5. За потреби: **Налаштування → Ignore apps** або біометрія.
 
 ---
 
@@ -66,78 +66,50 @@ cp .env.example .env
 
 | Змінна | Призначення |
 |--------|-------------|
-| `PLAY_UPLOAD_*` | Локальний upload keystore для релізних збірок (опційно) |
-| `APP_DB_ENCRYPTION_KEY_BASE64` | Ключ шифрування БД для dev/debug (production — Android Keystore + SQLCipher passphrase) |
+| `PLAY_UPLOAD_*` | Upload keystore для release (опційно) |
+| `DEBUG_DB_ENCRYPTION_KEY` | Base64 passphrase для **debug** (до створення PIN) |
 
-Gradle читає `.env` через `dotenv` plugin або `local.properties` fallback — деталі в фазі 0 плану в `docs/PROJECT_IDEA.md`.
-
-> **Google Play:** використовуйте [Play App Signing](https://support.google.com/googleplay/android-developer/answer/9842756); upload key зберігайте лише локально в `.env` / `upload-keystore.properties`.
+Release: passphrase генерується на пристрої при створенні PIN.
 
 ---
 
-## Дозволи та приватність
+## Дозволи
 
 | Дозвіл / API | Навіщо |
 |--------------|--------|
-| `BIND_NOTIFICATION_LISTENER_SERVICE` | Єдиний легальний спосіб читати нотіфікації інших додатків |
-| `USE_BIOMETRIC` | Розблокування журналу |
-| `POST_NOTIFICATIONS` (API 33+) | Власні сповіщення (напр. «сервіс активний») — опційно |
-| `FOREGROUND_SERVICE` | Стабільний listener на OEM з агресивним kill — за потреби |
-| **Немає** `INTERNET` | Політика офлайн |
+| `BIND_NOTIFICATION_LISTENER_SERVICE` | Збір нотіфікацій |
+| `USE_BIOMETRIC` | Розблокування |
+| **Немає** `INTERNET` | Офлайн-політика |
 
-Політика конфіденційності для Store: дані не покидають пристрій; видалення — через «Очистити історію» / деінсталяцію.
-
----
-
-## Архітектура (коротко)
-
-```
-app/
-├── data/          # Room, DAO, SQLCipher, репозиторії
-├── domain/        # Use cases, моделі
-├── service/       # NotificationListenerService
-├── security/      # PIN, Keystore, Crypto, root check, secure wipe
-└── ui/            # Compose: feed, detail, settings, lock
-```
-
-Стек: **Kotlin**, **Coroutines + Flow**, **Hilt**, **Compose Navigation**, **Coil** (локальні URI), **DataStore** (налаштування).
+Політика Store: [`docs/PRIVACY.md`](docs/PRIVACY.md).
 
 ---
 
 ## Розробка
 
 ```bash
+./gradlew assembleDebug
 ./gradlew test
 ./gradlew lint
-./gradlew assembleRelease   # після налаштування signing
 ```
 
-Стиль: офіційні [Kotlin conventions](https://kotlinlang.org/docs/coding-conventions.html), [Architecture Samples](https://github.com/android/architecture-samples) (Clean-ish layers).
+CI: [`.github/workflows/android.yml`](.github/workflows/android.yml).
 
 ---
 
 ## Дорожня карта
 
-Див. таблицю фаз у [`docs/PROJECT_IDEA.md`](docs/PROJECT_IDEA.md#фази-імплементації).
-
-| Фаза | Зміст |
+| Фаза | Статус |
 |------|--------|
-| 0 | Gradle, модулі, `.env`, CI, політика INTERNET-free |
-| 1 | Listener + Room + базовий feed |
-| 2 | Групи, оновлення, медіа |
-| 3 | Шифрування, lock, 10-attempt wipe, root block |
-| 4 | Налаштування, polish, Play |
-| 5 | Опційно: export, віджет, Wear, OEM guide |
-| 6 | Foldable / планшети: list-detail для feed, detail, settings (M3 adaptive) |
+| 0 | ✅ Gradle, CI, root guard, `.env` |
+| 1 | ✅ Listener, parser, feed, detail |
+| 2 | ✅ Групи, медіа, blacklist, settings |
+| 3 | ✅ SQLCipher, lock, wipe, біометрія |
+| 4 | ⏳ Play polish, retention, i18n |
+| 5–6 | ⏳ Опційно / foldables |
 
 ---
 
-## Ліцензія та внесок
+## Ліцензія
 
-Проєкт відкритий (Apache 2.0 — файл `LICENSE` додається у фазі 0). Issues та PR вітаються.
-
----
-
-## Контакти
-
-Замініть на свій репозиторій / email після публікації.
+Apache 2.0 — див. [`LICENSE`](LICENSE).
