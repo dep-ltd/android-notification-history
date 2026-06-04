@@ -12,6 +12,8 @@
     <string name="feed_empty_hint">Enable notification access in system settings, then open any app that sends notifications.</string>
     <string name="feed_empty_filtered">No notifications match your search or filter</string>
     <string name="feed_group_count">%1$d messages in group</string>
+    <string name="feed_group_notifications">%1$d notifications in this group</string>
+    <string name="feed_group_generic">Notification group</string>
     <string name="feed_expand_group">Expand group</string>
     <string name="feed_collapse_group">Collapse group</string>
     <string name="feed_updated_badge">Updated</string>

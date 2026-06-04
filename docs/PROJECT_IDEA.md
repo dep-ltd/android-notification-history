@@ -87,6 +87,32 @@
 - **Оновлення:** той самий `stableKey` → `UPDATE` замість нового рядка; оновити `updatedAt`, текст, медіа.
 - **Видалення:** `onNotificationRemoved` → позначити `removedAt`, не обов’язково стирати одразу (політика retention у налаштуваннях).
 
+#### 4.2.1 Парсинг і відображення груп (обов’язково з фази 4.1)
+
+**Джерело `groupKey`:** `StatusBarNotification.groupKey`, fallback — `Notification.group`.
+
+**Парсер (`NotificationExtrasReader`)** — title/text не лише з `EXTRA_TITLE` / `EXTRA_TEXT`:
+
+| Джерело в extras | Поле |
+|------------------|------|
+| `EXTRA_TITLE`, `android.conversationTitle` | title |
+| `EXTRA_TEXT`, `EXTRA_BIG_TEXT`, `EXTRA_SUMMARY_TEXT`, `EXTRA_INFO_TEXT`, `EXTRA_SUB_TEXT` | text |
+| `EXTRA_TEXT_LINES` (InboxStyle) | text = останній рядок |
+| `android.messages[]` (MessagingStyle) | sender → title, text → body (останнє за timestamp) |
+| Group summary без тексту | title = `appLabel`; text з subtext/info, якщо є |
+
+**Заборонено в UI:** показувати порожній group summary як картку з «No title / No text».
+
+**Feed (`NotificationFeedGrouper` + `FeedScreen`):**
+
+- Summary без `title` і `text` **не** використовується як заголовок групи.
+- Заголовок групи: summary з контентом → інакше найновіше дитяче з контентом → інакше placeholder («{app} · N сповіщень у групі»).
+- Кожне дочіче сповіщення (`!isGroupSummary`) — окремий рядок у розгорнутій групі з власним title/text.
+- Група з одним дочірнім повідомленням лишається **групою**, не зливається в `Single`.
+- Unit-тести: `NotificationExtrasReaderTest`, `NotificationFeedGrouperTest`.
+
+**Примітка:** записи в БД, збережені до оновлення парсера, можуть лишатися з порожніми полями; нові нотіфікації мають парситися коректно.
+
 ### 4.3 Зображення та посилання
 
 - **Зображення:** `Notification.largeIcon`, `MessagingStyle` photos, `PictureAttachment` — копія в app-private storage (`EncryptedFile` або директорія під SQLCipher-модулем).
@@ -332,6 +358,7 @@ Gradle (`build.gradle.kts`):
 - [x] Compose **Feed**: `ViewModel` + `StateFlow`, `LazyColumn`, empty state
 - [x] Navigation: Feed → Detail (базовий текст + іконка)
 - [x] Unit-тести parser для `EXTRA_TITLE`, `EXTRA_TEXT`
+- [x] *(4.1)* Розширений парсер: MessagingStyle, Inbox lines, group summary (див. §4.2.1)
 
 **Критерій:** після дозволу нові push з Telegram/Email з’являються в списку після перезапуску.
 
@@ -344,10 +371,12 @@ Gradle (`build.gradle.kts`):
 - [x] `stableKey` upsert: POSTED vs UPDATED
 - [x] `onNotificationRemoved` → `removedAt`
 - [x] Group key: summary + children, UI expand/collapse
+- [x] *(4.1)* Групи без «No title» на summary; діти окремими рядками (див. §4.2.1)
 - [x] Збереження `largeIcon` / BigPicture (стиснення, ліміт розміру)
 - [x] Detail: галерея зображень (Coil), показ `clickUri` (відкриття через `CustomTabs` **без** INTERNET permission — використати `Intent.ACTION_VIEW` лише на user tap, optional feature flag)
 - [x] Blacklist: DataStore + filter у repository
 - [x] Settings screen: список installed apps + search
+- [x] *(4.1)* Повний список installed apps для blacklist (`QUERY_ALL_PACKAGES` + `getInstalledApplications`, див. §4.1.3)
 
 **Критерій:** груповий чат не дублює 50 рядків; оновлення одного message id оновлює запис.
 
@@ -368,6 +397,9 @@ Gradle (`build.gradle.kts`):
 - [x] `WipeAllDataUseCase` на 10-й невдачі (БД, файли, prefs, Keystore)
 - [x] Онбординг: згода з політикою стирання; екран після wipe
 
+- [x] *(4.1)* `MainActivity` extends `FragmentActivity` (вимога `BiometricPrompt`)
+- [x] *(4.1)* БД недоступна до PIN; `setupPin` → `recreateEncrypted()` без race з plain SQLite (див. §4.1.2)
+
 **Критерій:** 10 невірних PIN підряд знищують дані і повертають на setup; біометрія теж інкрементує лічильник; на root-пристрої feed недоступний.
 
 ---
@@ -384,7 +416,70 @@ Gradle (`build.gradle.kts`):
 - [x] Data safety, content rating, notification listener declaration
 - [x] Release build, internal testing track, bugfix OEM (Xiaomi, Samsung)
 
+- [x] *(4.1)* `HiltWorkerFactory`: вимкнено `WorkManagerInitializer` у manifest (див. §4.1.2)
+- [x] *(4.1)* `RetentionWorker` не звертається до БД до встановлення PIN
+- [x] *(4.1)* Empty state feed з `weight(1f)` і окремими текстами для фільтра (див. §4.1.4)
+
 **Критерій:** успішна internal testing, відсутність INTERNET у merged manifest, пройдений checklist Play.
+
+---
+
+### Фаза 4.1 — Стабілізація та доопрацювання (реалізовано; для повторної валідації)
+
+**Ціль:** закрити краші онбордингу, коректні групи нотіфікацій, UX feed/settings, адаптивний layout (фаза 6).  
+**Статус:** реалізовано в `main` (коміти після v1.0); використовуй §13 для регресійної перевірки.
+
+#### 4.1.1 WorkManager і життєвий цикл UI
+
+| Вимога | Реалізація / файл |
+|--------|------------------|
+| `RetentionWorker` через `@HiltWorker` + `HiltWorkerFactory` | `NotificationHistoryApp`, `RetentionWorker.kt` |
+| Вимкнути дефолтний `WorkManagerInitializer` | `AndroidManifest` — `tools:node="remove"` на `androidx.work.WorkManagerInitializer` |
+| Retention не чіпає БД без PIN | `RetentionWorker`: `if (!authManager.isPinSet()) return success` |
+| `FeedViewModel` не створюється на consent/setup/lock | `hiltViewModel()` лише в `composable("feed")`, не в `MainActivity` |
+| Repository не відкриває SQLCipher до PIN | `NotificationRepository.isDatabaseReady()` |
+
+**Валідація:** чистий install → consent → PIN → feed без FATAL; logcat без `NoSuchMethodException` для `RetentionWorker` і без `Database is not available until a PIN is configured` на старті.
+
+#### 4.1.2 SQLCipher і створення PIN
+
+| Вимога | Реалізація |
+|--------|------------|
+| Не викликати `ensureDatabasePassphrase()` **до** видалення старого файлу БД | `AuthManager.setupPin()` → лише `databaseHolder.recreateEncrypted()` |
+| Ніколи відкривати незашифровану persistent Room | `DatabaseHolder.openDatabase()` вимагає passphrase |
+| Повне видалення `.db` + `-wal` / `-shm` / journal | `DatabaseHolder.wipeDatabaseFiles()` |
+| Recovery при plain/corrupt файлі | catch `file is not a database` → wipe + reopen |
+| Passphrase в secure prefs після PIN; debug key не маскує `hasDatabasePassphrase()` | `SecurityManager` |
+
+**Валідація:** `pm clear` → онбординг → PIN → feed; повторний запуск; немає `SQLiteException: file is not a database`.
+
+#### 4.1.3 Blacklist — список додатків
+
+| Вимога | Реалізація |
+|--------|------------|
+| Не лише launcher apps | `InstalledAppsLoader`: `getInstalledApplications` + launcher query + пакети з історії |
+| `QUERY_ALL_PACKAGES` + `<queries>` для MAIN/LAUNCHER | `AndroidManifest` |
+| Асинхронне завантаження, loading, empty search | `AppPickerViewModel`, `AppPickerScreen` |
+| Master-detail: app picker на medium+ у правій панелі з прокруткою | `SettingsAdaptive` + `weight(1f)` на списку |
+
+**Валідація:** Settings → Ignore apps — сотні пакетів (не 10–20); пошук за назвою/package; toggle зберігається.
+
+#### 4.1.4 Feed — порожній стан і фільтри
+
+| Вимога | Реалізація |
+|--------|------------|
+| Empty state займає область під search/chips | `Modifier.weight(1f)` на `FeedEmptyState` / `LazyColumn` |
+| Окремі рядки: немає записів / немає за фільтром | `feed_empty`, `feed_empty_hint`, `feed_empty_filtered` |
+| Іконка + центрування (M3 empty state) | `FeedEmptyState` composable |
+
+**Валідація:** порожній журнал — видимий текст по центру; пошук без збігів — інше повідомлення.
+
+#### 4.1.5 Listener — стійкість
+
+| Вимога | Реалізація |
+|--------|------------|
+| Іконка від видаленого/відсутнього package не крашить service | `extractSmallIconBitmap` try/catch → `null` |
+| Збереження лише після PIN | `handleNotification`: `if (!authManager.isPinSet()) return` |
 
 ---
 
@@ -397,23 +492,25 @@ Gradle (`build.gradle.kts`):
 
 ---
 
-### Фаза 6 — Foldable та великі екрани (2–3 тижні)
+### Фаза 6 — Foldable та великі екрани (реалізовано)
 
 **Ціль:** адаптивний layout за офіційними гайдлайнами Android / Material 3 для **feed**, **detail** і **settings** (див. §5.2.1).
 
-- [ ] Залежності: `material3-adaptive`, `window`, `adaptive-navigation-suite`
-- [ ] `WindowSizeClass` + `NavigationSuiteScaffold` на root (bar / rail)
-- [ ] **Feed + Detail:** `ListDetailPaneScaffold` — compact = single pane; medium/expanded = list-detail з shared `ViewModel` / selected id
-- [ ] Placeholder у secondary pane, збереження стану списку при зміні fold
-- [ ] **Detail:** адаптивний layout (одна / дві колонки, галерея зображень)
-- [ ] **Settings:** master-detail на medium+; compact — існуючий однопанельний flow
-- [ ] **App picker (blacklist):** supporting pane або full-width на compact
-- [ ] Hinge: обробка `WindowLayoutInfo` / відступи, без критичного UI на згині
-- [ ] `resizeableActivity`, перевірка fold/posture у `AndroidManifest`
-- [ ] Preview: `@Preview(device = Devices.FOLDABLE)` + планшет; instrumented screenshot tests (опційно)
-- [ ] Ручний тест: Fold emulator, Galaxy Fold / Pixel Fold (якщо доступно), зміна орієнтації та half-opened
+- [x] Залежності: `material3-adaptive`, `material3-window-size-class`, `material3-adaptive-navigation-suite`, `androidx.window`
+- [x] `calculateWindowSizeClass` + `NavigationSuiteScaffold` (Feed / Settings) — `MainAppScaffold`
+- [x] **Feed + Detail:** compact = push `detail/{id}`; medium+ = `Row` list ~42% + detail ~58%, `rememberSaveable` selected id
+- [x] Placeholder у detail pane — «Оберіть сповіщення» (`detail_select_prompt`)
+- [x] **Detail:** двоколонковий layout на `WindowWidthSizeClass.Expanded`
+- [x] **Settings:** master-detail на medium+ (`SettingsSection` + `SettingsPanel` / embedded `AppPickerScreen`)
+- [x] **App picker:** full screen на compact; embedded у правій панелі на medium+
+- [x] Hinge: `adaptiveHingePadding()` через `WindowInfoTracker` (спрощено — padding при half-opened)
+- [x] `resizeableActivity="true"`, `configChanges` screenSize|smallestScreenSize|screenLayout|orientation
+- [ ] Preview: `@Preview(device = Devices.FOLDABLE)` + планшет (опційно)
+- [ ] Instrumented screenshot tests (опційно)
 
-**Критерій:** на unfolded fold користувач бачить список і деталь одночасно; на телефоні — як раніше (стек); налаштування на планшеті — дві панелі без «розтягнутого» телефонного UI; немає регресії на compact.
+**Примітка:** замість `ListDetailPaneScaffold` (API 1.0) використано `Row` + `WindowSizeClass` — достатньо для критерію list-detail на medium+.
+
+**Критерій:** на unfolded fold / планшеті — список і деталь одночасно; на телефоні — стек; settings у дві колонки; немає регресії compact.
 
 **Визначення готовності v1.1 (large screens):** пункти 1–8 з §12 збережені + list-detail на width ≥ medium для feed/detail/settings.
 
@@ -466,6 +563,55 @@ android-notification-history/
 6. На рутованому пристрої — блокуючий екран, listener не збирає дані.
 7. БД і файли зашифровані; секрети не в git.
 8. Додаток проходить lint, тести, internal Play track.
+
+---
+
+## 13. Чекліст повторної валідації (після фаз 4.1 + 6)
+
+Виконуй на **debug build** після `pm clear` (або fresh install), пристрій **без root**, notification access увімкнено.
+
+### A. Онбординг і безпека
+
+- [ ] Запуск без крашу до PIN (немає FATAL у logcat)
+- [ ] Consent → PIN (6 цифр) → feed
+- [ ] Біометрія в Settings (якщо доступна) — unlock працює
+- [ ] Background → foreground з lock timeout
+- [ ] 10 невдалих спроб → wipe screen → знову consent (опційно, тестовий PIN)
+
+### B. Журнал (feed)
+
+- [ ] Порожній журнал: іконка + текст + підказка **видимі** (не згорнуті в 0px)
+- [ ] Пошук без збігів — `feed_empty_filtered`
+- [ ] Нова нотіфікація з’являється після unlock
+- [ ] Група з месенджера: заголовок **не** «No title / No text»
+- [ ] Розгортання групи — кожне повідомлення з власним title/text
+- [ ] Compact: tap → detail; Medium+: list + detail без back на detail pane
+
+### C. Налаштування
+
+- [ ] Ignore apps — повний список + пошук
+- [ ] Blacklist: нові нотіфікації від обраного package **не** зберігаються
+- [ ] Retention slider / clear history (за бажанням)
+
+### D. Адаптивність (фаза 6)
+
+- [ ] Телефон: bottom nav (Журнал / Налаштування)
+- [ ] Fold unfolded / емулятор планшета: list-detail feed, settings у 2 колонки
+- [ ] Поворот / half-fold — без крашу, стан списку зберігається
+
+### E. Автотести
+
+```bash
+./gradlew testDebugUnitTest assembleDebug
+```
+
+Очікується: success; ключові тести — `NotificationExtrasReaderTest`, `NotificationFeedGrouperTest`, `NotificationParserTest`.
+
+### F. Play / manifest (регресія)
+
+- [ ] Merged manifest: **немає** `INTERNET`
+- [ ] `QUERY_ALL_PACKAGES` — задекларовано в Play Console (якщо публікуєте в Store)
+- [ ] `WorkManagerInitializer` removed у merged manifest
 
 ---
 

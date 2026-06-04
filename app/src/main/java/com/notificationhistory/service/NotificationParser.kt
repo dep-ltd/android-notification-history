@@ -26,10 +26,12 @@ class NotificationParser @Inject constructor(
     private val mediaStorage: MediaStorage
 ) {
 
-    fun parseExtras(extras: Bundle): ParsedNotificationFields {
-        val title = extras.getString(Notification.EXTRA_TITLE)
-        val text = extras.getCharSequence(Notification.EXTRA_TEXT)?.toString()
-        return ParsedNotificationFields(title = title, text = text)
+    fun parseExtras(
+        extras: Bundle,
+        isGroupSummary: Boolean = false,
+        appLabel: String? = null
+    ): ParsedNotificationFields {
+        return NotificationExtrasReader.parse(extras, isGroupSummary, appLabel)
     }
 
     fun parse(
@@ -39,7 +41,8 @@ class NotificationParser @Inject constructor(
     ): NotificationEvent {
         val notification = sbn.notification
         val extras = notification.extras
-        val fields = parseExtras(extras)
+        val isGroupSummary = notification.flags and Notification.FLAG_GROUP_SUMMARY != 0
+        val fields = parseExtras(extras, isGroupSummary, appLabel)
         val mediaPaths = buildMediaPaths(context, extras, notification, smallIconBitmap)
 
         return NotificationEvent(
@@ -50,8 +53,8 @@ class NotificationParser @Inject constructor(
             title = fields.title,
             text = fields.text,
             channelId = notification.channelId,
-            groupKey = sbn.groupKey,
-            isGroupSummary = notification.flags and Notification.FLAG_GROUP_SUMMARY != 0,
+            groupKey = resolveGroupKey(sbn, notification),
+            isGroupSummary = isGroupSummary,
             clickUri = parseClickUri(extras),
             mediaPaths = mediaPaths
         )
@@ -93,6 +96,14 @@ class NotificationParser @Inject constructor(
         val text = extras.getCharSequence(Notification.EXTRA_TEXT)?.toString()
         return extractHttpUri(text)
             ?: extras.getCharSequence(Notification.EXTRA_BIG_TEXT)?.toString()?.let { extractHttpUri(it) }
+    }
+
+    private fun resolveGroupKey(
+        sbn: StatusBarNotification,
+        notification: Notification
+    ): String? {
+        return sbn.groupKey?.takeIf { it.isNotEmpty() }
+            ?: notification.group?.takeIf { it.isNotEmpty() }
     }
 
     private fun extractHttpUri(value: String?): String? {

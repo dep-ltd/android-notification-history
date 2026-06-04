@@ -1,6 +1,7 @@
 package com.notificationhistory.data.models
 
 import com.notificationhistory.data.entities.NotificationEvent
+import com.notificationhistory.data.entities.hasDisplayableContent
 
 object NotificationFeedGrouper {
 
@@ -18,24 +19,42 @@ object NotificationFeedGrouper {
             val inGroup = events.filter { it.groupKey == groupKey }
             if (inGroup.isEmpty()) continue
 
-            val summary = inGroup.find { it.isGroupSummary }
-            val children = inGroup.filter { !it.isGroupSummary }
-            if (summary == null && children.size <= 1) {
-                val lone = children.singleOrNull() ?: summary
-                lone?.let {
-                    if (it.id !in consumed) {
-                        items.add(FeedListItem.Single(it))
-                        consumed.add(it.id)
+            val children = inGroup
+                .filter { !it.isGroupSummary }
+                .sortedByDescending { it.postedAt }
+            val summary = inGroup
+                .find { it.isGroupSummary && it.hasDisplayableContent() }
+
+            if (children.isEmpty() && summary == null) {
+                inGroup.filter { it.isGroupSummary }.forEach { summaryOnly ->
+                    if (summaryOnly.id !in consumed) {
+                        items.add(FeedListItem.Single(summaryOnly))
+                        consumed.add(summaryOnly.id)
                     }
                 }
                 continue
             }
 
+            if (children.isEmpty() && summary != null) {
+                items.add(
+                    FeedListItem.Group(
+                        groupKey = groupKey,
+                        summary = summary,
+                        children = emptyList(),
+                        isExpanded = groupKey in expandedGroupKeys
+                    )
+                )
+                consumed.addAll(inGroup.map { it.id })
+                continue
+            }
+
+            if (children.isEmpty()) continue
+
             items.add(
                 FeedListItem.Group(
                     groupKey = groupKey,
                     summary = summary,
-                    children = children.sortedByDescending { it.postedAt },
+                    children = children,
                     isExpanded = groupKey in expandedGroupKeys
                 )
             )

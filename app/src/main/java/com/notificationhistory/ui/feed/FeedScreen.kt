@@ -27,6 +27,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.notificationhistory.R
 import com.notificationhistory.data.entities.NotificationEvent
+import com.notificationhistory.data.entities.hasDisplayableContent
 import com.notificationhistory.data.models.FeedListItem
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -131,8 +132,8 @@ fun FeedScreen(
                         is FeedListItem.Group -> GroupFeedItem(
                             item = item,
                             onToggle = { viewModel.toggleGroup(item.groupKey) },
-                            onSummaryClick = item.summary?.let { summary ->
-                                { onNotificationClick(summary.id) }
+                            onSummaryClick = (item.summary ?: item.children.firstOrNull())?.let { target ->
+                                { onNotificationClick(target.id) }
                             },
                             onChildClick = onNotificationClick
                         )
@@ -151,8 +152,14 @@ private fun GroupFeedItem(
     onSummaryClick: (() -> Unit)?,
     onChildClick: (Long) -> Unit
 ) {
-    val display = item.summary ?: item.children.firstOrNull() ?: return
+    if (item.children.isEmpty() && item.summary == null) return
     val childCount = item.children.size
+    val headerEvent = item.summary?.takeIf { it.hasDisplayableContent() }
+        ?: item.children.maxByOrNull { it.postedAt }?.takeIf { it.hasDisplayableContent() }
+    val appLabel = item.summary?.appLabel
+        ?: item.children.firstOrNull()?.appLabel
+        ?: item.summary?.packageName
+        ?: ""
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -167,7 +174,14 @@ private fun GroupFeedItem(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    NotificationItemContent(display)
+                    if (headerEvent != null) {
+                        NotificationItemContent(headerEvent)
+                    } else {
+                        GroupHeaderPlaceholder(
+                            appLabel = appLabel,
+                            messageCount = childCount
+                        )
+                    }
                     if (childCount > 0) {
                         Text(
                             text = stringResource(R.string.feed_group_count, childCount),
@@ -226,6 +240,25 @@ fun NotificationItem(
         Box(modifier = Modifier.padding(16.dp)) {
             NotificationItemContent(event)
         }
+    }
+}
+
+@Composable
+private fun GroupHeaderPlaceholder(
+    appLabel: String,
+    messageCount: Int
+) {
+    Column {
+        Text(
+            text = appLabel.ifBlank { stringResource(R.string.feed_group_generic) },
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = stringResource(R.string.feed_group_notifications, messageCount),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 

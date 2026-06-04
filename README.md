@@ -106,7 +106,11 @@ CI: [`.github/workflows/android.yml`](.github/workflows/android.yml).
 | 2 | ✅ Групи, медіа, blacklist, settings |
 | 3 | ✅ SQLCipher, lock, wipe, біометрія |
 | 4 | ✅ Retention, пошук, uk/en, Play docs |
-| 5–6 | ⏳ Опційно / foldables |
+| 4.1 | ✅ Стабілізація: PIN/БД, групи, app picker, empty feed — [§13](docs/PROJECT_IDEA.md#13-чекліст-повторної-валідації-після-фаз-41--6) |
+| 5 | ⏳ Опційно (export, widget, Wear) |
+| 6 | ✅ Adaptive UI (fold / tablet) |
+
+Повторна валідація: [`docs/PROJECT_IDEA.md` §13](docs/PROJECT_IDEA.md#13-чекліст-повторної-валідації-після-фаз-41--6).
 
 ---
 

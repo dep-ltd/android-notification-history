@@ -13,6 +13,8 @@
     <string name="feed_empty_hint">Увімкніть доступ до сповіщень у системі, потім відкрийте будь-який додаток із нотіфікаціями.</string>
     <string name="feed_empty_filtered">Немає сповіщень за вашим пошуком або фільтром</string>
     <string name="feed_group_count">%1$d повідомлень у групі</string>
+    <string name="feed_group_notifications">%1$d сповіщень у цій групі</string>
+    <string name="feed_group_generic">Група сповіщень</string>
     <string name="feed_expand_group">Розгорнути групу</string>
     <string name="feed_collapse_group">Згорнути групу</string>
     <string name="feed_updated_badge">Оновлено</string>
