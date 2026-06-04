@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Notification History</string>
+    <string name="service_name">Notification History Listener</string>
+</resources>
