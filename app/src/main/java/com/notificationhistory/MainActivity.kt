@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.compose.setContent
 import androidx.fragment.app.FragmentActivity
-import androidx.activity.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.ProcessLifecycleOwner
@@ -15,7 +14,6 @@ import com.notificationhistory.security.RootDetector
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import com.notificationhistory.ui.feed.FeedViewModel
 import com.notificationhistory.ui.navigation.AppNavGraph
 import com.notificationhistory.ui.root.RootWarningScreen
 import com.notificationhistory.ui.theme.NotificationHistoryTheme
@@ -33,8 +31,6 @@ class MainActivity : FragmentActivity() {
 
     @Inject
     lateinit var settingsManager: SettingsManager
-
-    private val feedViewModel: FeedViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -72,8 +68,7 @@ class MainActivity : FragmentActivity() {
             NotificationHistoryTheme {
                 AppNavGraph(
                     authManager = authManager,
-                    sessionManager = sessionManager,
-                    feedViewModel = feedViewModel
+                    sessionManager = sessionManager
                 )
             }
         }

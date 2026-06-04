@@ -1,12 +1,15 @@
 package com.notificationhistory.data.repository
 
 import com.notificationhistory.data.DatabaseHolder
+import com.notificationhistory.data.dao.NotificationDao
 import com.notificationhistory.data.entities.NotificationEvent
 import com.notificationhistory.data.entities.NotificationEventType
 import com.notificationhistory.data.preferences.SettingsManager
+import com.notificationhistory.security.AuthManager
 import com.notificationhistory.util.MediaStorage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -15,22 +18,37 @@ import javax.inject.Singleton
 class NotificationRepository @Inject constructor(
     private val databaseHolder: DatabaseHolder,
     private val settingsManager: SettingsManager,
-    private val mediaStorage: MediaStorage
+    private val mediaStorage: MediaStorage,
+    private val authManager: AuthManager
 ) {
-    private val notificationDao get() = databaseHolder.get().notificationDao()
+    private fun isDatabaseReady(): Boolean = authManager.isPinSet()
+
+    private fun dao(): NotificationDao = databaseHolder.get().notificationDao()
 
     val allNotifications: Flow<List<NotificationEvent>> = settingsManager.blacklistFlow
         .flatMapLatest { blacklist ->
-            notificationDao.getAllNotifications().map { events ->
-                events.filter { it.packageName !in blacklist }
+            if (!isDatabaseReady()) {
+                flowOf(emptyList())
+            } else {
+                dao().getAllNotifications().map { events ->
+                    events.filter { it.packageName !in blacklist }
+                }
             }
         }
 
-    fun observeNotification(id: Long): Flow<NotificationEvent?> = notificationDao.observeById(id)
+    fun observeNotification(id: Long): Flow<NotificationEvent?> {
+        if (!isDatabaseReady()) return flowOf(null)
+        return dao().observeById(id)
+    }
 
-    fun observeDistinctPackages(): Flow<List<String>> = notificationDao.observeDistinctPackages()
+    fun observeDistinctPackages(): Flow<List<String>> {
+        if (!isDatabaseReady()) return flowOf(emptyList())
+        return dao().observeDistinctPackages()
+    }
 
     suspend fun pruneExpiredNotifications() {
+        if (!isDatabaseReady()) return
+        val notificationDao = dao()
         val retentionDays = settingsManager.getRetentionDays()
         val cutoff = System.currentTimeMillis() - retentionDays * 24L * 60L * 60L * 1000L
         val expired = notificationDao.getOlderThan(cutoff)
@@ -41,6 +59,8 @@ class NotificationRepository @Inject constructor(
     }
 
     suspend fun clearAllHistory() {
+        if (!isDatabaseReady()) return
+        val notificationDao = dao()
         val all = notificationDao.getOlderThan(Long.MAX_VALUE)
         all.forEach { event ->
             event.mediaPaths.forEach { path -> mediaStorage.deleteFile(path) }
@@ -49,6 +69,8 @@ class NotificationRepository @Inject constructor(
     }
 
     suspend fun upsertNotification(incoming: NotificationEvent) {
+        if (!isDatabaseReady()) return
+        val notificationDao = dao()
         val existing = notificationDao.getByStableKey(incoming.stableKey)
         val now = System.currentTimeMillis()
 
@@ -74,11 +96,13 @@ class NotificationRepository @Inject constructor(
         }
 
         if (toSave.groupKey != null && !toSave.isGroupSummary) {
-            linkChildToSummary(rowId, toSave.packageName, toSave.groupKey)
+            linkChildToSummary(notificationDao, rowId, toSave.packageName, toSave.groupKey)
         }
     }
 
     suspend fun markAsRemoved(stableKey: String) {
+        if (!isDatabaseReady()) return
+        val notificationDao = dao()
         val existing = notificationDao.getByStableKey(stableKey) ?: return
         notificationDao.update(
             existing.copy(
@@ -88,7 +112,12 @@ class NotificationRepository @Inject constructor(
         )
     }
 
-    private suspend fun linkChildToSummary(childId: Long, packageName: String, groupKey: String) {
+    private suspend fun linkChildToSummary(
+        notificationDao: NotificationDao,
+        childId: Long,
+        packageName: String,
+        groupKey: String
+    ) {
         val summary = notificationDao.getSummaryByGroup(packageName, groupKey) ?: return
         val child = notificationDao.getById(childId) ?: return
         if (child.summaryId == summary.id) return

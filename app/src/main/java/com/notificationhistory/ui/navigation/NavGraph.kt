@@ -11,6 +11,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.notificationhistory.security.AppSessionManager
 import com.notificationhistory.security.AuthManager
 import com.notificationhistory.security.BiometricGate
@@ -28,8 +29,7 @@ import com.notificationhistory.util.NotificationAccess
 @Composable
 fun AppNavGraph(
     authManager: AuthManager,
-    sessionManager: AppSessionManager,
-    feedViewModel: FeedViewModel
+    sessionManager: AppSessionManager
 ) {
     val navController = rememberNavController()
     val context = LocalContext.current
@@ -151,6 +151,7 @@ fun AppNavGraph(
             }
         }
         composable("feed") {
+            val feedViewModel: FeedViewModel = hiltViewModel()
             LaunchedEffect(isUnlocked, authManager.isPinSet()) {
                 if (authManager.isPinSet() && !isUnlocked) {
                     navController.navigate("lock") {
