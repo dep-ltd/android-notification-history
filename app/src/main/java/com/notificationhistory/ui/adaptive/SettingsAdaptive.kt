@@ -1,6 +1,7 @@
 package com.notificationhistory.ui.adaptive
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -81,11 +82,13 @@ fun SettingsAdaptive(
                     authManager = authManager,
                     activity = activity
                 )
-                SettingsSection.APPS -> AppPickerScreen(
-                    onBack = {},
-                    showTopBar = false,
-                    embedded = true
-                )
+                SettingsSection.APPS -> Box(modifier = Modifier.fillMaxSize()) {
+                    AppPickerScreen(
+                        onBack = {},
+                        showTopBar = false,
+                        embedded = true
+                    )
+                }
             }
         }
     }

@@ -8,7 +8,9 @@
     <string name="permission_granted_hint">Access enabled — continuing…</string>
 
     <string name="feed_title">Notification History</string>
-    <string name="feed_empty">No notifications yet. Grant access and trigger a test notification.</string>
+    <string name="feed_empty">No notifications saved yet</string>
+    <string name="feed_empty_hint">Enable notification access in system settings, then open any app that sends notifications.</string>
+    <string name="feed_empty_filtered">No notifications match your search or filter</string>
     <string name="feed_group_count">%1$d messages in group</string>
     <string name="feed_expand_group">Expand group</string>
     <string name="feed_collapse_group">Collapse group</string>
@@ -36,6 +38,7 @@
 
     <string name="app_picker_title">Ignore apps</string>
     <string name="app_picker_search">Search apps</string>
+    <string name="app_picker_empty">No apps found. Try a different search.</string>
 
     <string name="consent_title">Security policy</string>
     <string name="consent_body">After 10 failed unlock attempts (PIN or biometric), all notification history, media, and keys will be permanently deleted on this device.</string>

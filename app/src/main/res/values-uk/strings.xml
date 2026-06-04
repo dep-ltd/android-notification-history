@@ -9,7 +9,9 @@
     <string name="permission_granted_hint">Доступ увімкнено — продовжуємо…</string>
 
     <string name="feed_title">Журнал сповіщень</string>
-    <string name="feed_empty">Ще немає сповіщень. Надайте доступ і надішліть тестове сповіщення.</string>
+    <string name="feed_empty">Ще немає збережених сповіщень</string>
+    <string name="feed_empty_hint">Увімкніть доступ до сповіщень у системі, потім відкрийте будь-який додаток із нотіфікаціями.</string>
+    <string name="feed_empty_filtered">Немає сповіщень за вашим пошуком або фільтром</string>
     <string name="feed_group_count">%1$d повідомлень у групі</string>
     <string name="feed_expand_group">Розгорнути групу</string>
     <string name="feed_collapse_group">Згорнути групу</string>
@@ -37,6 +39,7 @@
 
     <string name="app_picker_title">Ігнорувати додатки</string>
     <string name="app_picker_search">Пошук додатків</string>
+    <string name="app_picker_empty">Додатків не знайдено. Спробуйте інший пошук.</string>
 
     <string name="consent_title">Політика безпеки</string>
     <string name="consent_body">Після 10 невдалих спроб розблокування (PIN або біометрія) вся історія, медіа та ключі будуть безповоротно видалені на цьому пристрої.</string>

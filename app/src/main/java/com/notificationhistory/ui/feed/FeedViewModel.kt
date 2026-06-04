@@ -31,6 +31,14 @@ class FeedViewModel @Inject constructor(
 
     val packageFilterState: StateFlow<String?> = packageFilter
 
+    val hasActiveFilters: StateFlow<Boolean> = combine(searchQuery, packageFilter) { query, pkg ->
+        query.isNotBlank() || pkg != null
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = false
+    )
+
     val feedItems: StateFlow<List<FeedListItem>> = combine(
         repository.allNotifications,
         searchQuery,
