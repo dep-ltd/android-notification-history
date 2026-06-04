@@ -1,0 +1,34 @@
+# Local secrets (never commit)
+.env
+local.properties
+
+# Android / Gradle
+*.iml
+.gradle/
+/build/
+**/build/
+.cxx/
+.externalNativeBuild/
+captures/
+.idea/
+*.apk
+*.ap_
+*.aab
+*.dex
+*.class
+bin/
+gen/
+out/
+.navigation/
+
+# Keystore (use Play App Signing; keep upload key out of repo)
+*.jks
+*.keystore
+upload-keystore.properties
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Kotlin
+.kotlin/
