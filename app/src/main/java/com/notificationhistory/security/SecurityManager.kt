@@ -26,8 +26,9 @@ class SecurityManager @Inject constructor(
         EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
     )
 
-    fun hasDatabasePassphrase(): Boolean =
-        securePrefs.contains(KEY_DB_PASSPHRASE) || debugPassphraseBytes() != null
+    fun hasDatabasePassphrase(): Boolean = securePrefs.contains(KEY_DB_PASSPHRASE)
+
+    fun hasDebugPassphrase(): Boolean = debugPassphraseBytes() != null
 
     fun ensureDatabasePassphrase() {
         if (securePrefs.contains(KEY_DB_PASSPHRASE)) return
@@ -38,10 +39,12 @@ class SecurityManager @Inject constructor(
     }
 
     fun getDatabasePassphraseBytes(): ByteArray {
-        debugPassphraseBytes()?.let { return it }
         val encoded = securePrefs.getString(KEY_DB_PASSPHRASE, null)
-            ?: throw IllegalStateException("Database passphrase is missing")
-        return Base64.decode(encoded, Base64.NO_WRAP)
+        if (encoded != null) {
+            return Base64.decode(encoded, Base64.NO_WRAP)
+        }
+        debugPassphraseBytes()?.let { return it }
+        throw IllegalStateException("Database passphrase is missing")
     }
 
     fun clearSecureStorage() {

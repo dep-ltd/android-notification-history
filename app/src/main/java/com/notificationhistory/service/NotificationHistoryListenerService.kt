@@ -84,7 +84,11 @@ class NotificationHistoryListenerService : NotificationListenerService() {
 
     private fun extractSmallIconBitmap(sbn: StatusBarNotification): Bitmap? {
         val icon = sbn.notification.smallIcon ?: return null
-        val drawable = icon.loadDrawable(this) ?: return null
-        return NotificationParser.bitmapFromDrawable(drawable)
+        return try {
+            val drawable = icon.loadDrawable(this) ?: return null
+            NotificationParser.bitmapFromDrawable(drawable)
+        } catch (_: Exception) {
+            null
+        }
     }
 }

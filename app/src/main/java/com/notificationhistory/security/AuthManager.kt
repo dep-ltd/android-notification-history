@@ -48,7 +48,6 @@ class AuthManager @Inject constructor(
     }
 
     fun setupPin(pin: String) {
-        securityManager.ensureDatabasePassphrase()
         databaseHolder.recreateEncrypted()
         authPrefs.edit()
             .putString(KEY_PIN_HASH, hashPin(pin))
