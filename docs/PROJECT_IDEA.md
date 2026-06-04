@@ -11,7 +11,8 @@
 | Без інтернету | `INTERNET` не в маніфесті; жодних SDK аналітики / crashlytics з мережею |
 | Відкритий код | Прозорий код listener + шифрування; аудит приватності |
 | Локальність | Усі дані лише на пристрої |
-| Захист | Шифрування БД/файлів + біометрія або PIN |
+| Захист | Шифрування БД/файлів + біометрія або PIN; 10 невдалих спроб → повне стирання |
+| Без root | На рутованому пристрої додаток не працює, лише попередження |
 | Сучасний UX | Jetpack Compose, Material 3, dynamic color, адаптивні списки |
 
 ---
@@ -30,15 +31,16 @@
 
 ### 3.1 Перший запуск
 
-1. Екран онбордингу: пояснення, навіщо потрібен доступ до сповіщень.
-2. Перехід у системний екран `ACTION_NOTIFICATION_LISTENER_SETTINGS`.
-3. Створення 6-значного PIN на **кастомній numpad** (без `InputMethod`).
-4. Опційно: увімкнути біометрію (`BiometricPrompt`, weak/strong за політикою).
-5. Генерація ключа шифрування БД (Android Keystore) — прозоро для користувача.
+1. **Перевірка root** — якщо пристрій рутований: блокуючий екран «Додаток не підтримує рутовані пристрої»; listener і БД не ініціалізуються.
+2. Екран онбордингу: пояснення, навіщо потрібен доступ до сповіщень.
+3. Перехід у системний екран `ACTION_NOTIFICATION_LISTENER_SETTINGS`.
+4. Створення 6-значного PIN на **кастомній numpad** (без `InputMethod`) + **явна згода**: після 10 невдалих спроб розблокування (PIN або біометрія) усі дані будуть безповоротно знищені.
+5. Опційно: увімкнути біометрію (`BiometricPrompt`, weak/strong за політикою).
+6. Генерація ключа шифрування БД (Android Keystore) — прозоро для користувача.
 
 ### 3.2 Щоденне використання
 
-1. Розблокування (біометрія або PIN).
+1. Розблокування (біометрія або PIN); при помилці — інкремент спільного лічильника (залишилось N спроб до стирання).
 2. **Головний екран (Feed)** — хронологічний список: іконка, назва додатку, заголовок, прев’ю тексту, відносний час.
 3. Тап → **Деталі**: повний текст, package, channel id, час (дата + година), вкладені зображення (BigPicture, MessagingStyle), клікабельні посилання з `PendingIntent` / extras (де доступно).
 4. Пошук / фільтр за додатком або датою (фаза 4).
@@ -46,7 +48,7 @@
 ### 3.3 Налаштування
 
 - **Ігнорувати додатки** — мультивибір installed packages (іконка + label + package); зміни застосовуються до нових подій.
-- **Безпека** — змінити PIN, увімк/вимк біометрію, автоблокування (immediate / 1 / 5 хв).
+- **Безпека** — змінити PIN, увімк/вимк біометрію, автоблокування (immediate / 1 / 5 хв); нагадування про політику 10 спроб.
 - **Дані** — експорт зашифрованого backup (опційно, фаза 4+), очистити історію, видалити медіа-кеш.
 - **Про додаток** — версія, ліцензії open source, політика приватності.
 
@@ -111,7 +113,8 @@ NotificationListenerService (системний)
 
 | Екран | Composable / pattern |
 |-------|----------------------|
-| Lock | `LockScreen` + custom `Numpad` + `BiometricPrompt` |
+| Root blocked | `RootWarningScreen` — повноекранне M3, без навігації в feed |
+| Lock | `LockScreen` + custom `Numpad` + `BiometricPrompt` + лічильник спроб |
 | Feed | `LazyColumn` + `PullToRefresh` (локальний reload) + sticky date headers |
 | Detail | `Scaffold` + zoomable image (`Modifier.pointerInput`) |
 | Settings | `Preference`-like M3 screens, `LazyColumn` switches |
@@ -135,13 +138,61 @@ NotificationListenerService (системний)
 | БД | SQLCipher passphrase / `SupportFactory` |
 | Файли | `EncryptedFile` (AES256-GCM) |
 | Захист від скріншотів | `FLAG_SECURE` на lock і detail (опційно в налаштуваннях) |
+| Root | `RootDetector` — блокування до будь-якого доступу до даних |
+| Анти-підбір | Спільний лічильник невдалих спроб → `WipeAllDataUseCase` на 10-й |
 
 **Кастомна клавіатура:** `Grid` з цифрами 0–9, backspace, confirm; жодного `TextField` з системним IME; PIN лише в пам’яті до хешування.
+
+#### 5.4.1 Захист від підбору (10 невдалих спроб)
+
+**Політика:** один спільний лічильник `failedUnlockAttempts` (0–10) для **будь-якої** невдалої спроби розблокування:
+
+| Подія | Лічильник |
+|-------|-----------|
+| Невірний PIN (підтвердження на numpad) | +1 |
+| `BiometricPrompt` — `ERROR_*` / скасування після невдалої аутентифікації | +1 |
+| Успішний unlock (PIN або біометрія) | скидання в 0 |
+
+**На 10-й невдалій спробі** (атомарно, у фоні, перед показом UI):
+
+1. Зупинити / не запускати `NotificationListenerService`.
+2. Видалити файл SQLCipher, каталог медіа, DataStore, EncryptedSharedPreferences.
+3. Видалити ключі Android Keystore, пов’язані з додатком (alias app-specific).
+4. Скинути `failedUnlockAttempts` і стан сесії.
+5. Перейти на екран «Дані знищено з міркувань безпеки» → онбординг (новий PIN), **без** відновлення старої історії.
+
+**UX:**
+
+- Під час онбордингу та в налаштуваннях — чекбокс/діалог згоди з політикою стирання.
+- На `LockScreen` — текст «Залишилось N спроб» (N = 10 − attempts).
+- Після стирання — не розкривати, чи був PIN правильним на 10-й спробі (захист від oracle).
+
+**Зберігання лічильника:** EncryptedSharedPreferences або захищений DataStore; інкремент лише після підтвердженої невдачі (не на випадковий tap).
+
+#### 5.4.2 Рутовані пристрої (не підтримуються)
+
+**Вимога:** на рутованому пристрої додаток **не працює** — не збирає нотіфікації, не показує журнал, не зберігає нові дані.
+
+**Детекція** (комбінація сигналів, консервативно — false positive краще, ніж пропуск root):
+
+- `Build.TAGS` містить `test-keys`
+- Наявність `su`, `magisk`, типових root-шляхів (`/system/xbin/su`, …)
+- Встановлені пакети: Magisk, SuperSU, KernelSU (whitelist оновлюється)
+- `RootBeer` або власний `RootDetector` (release); **debug** — `BuildConfig.ALLOW_ROOT_FOR_DEBUG` лише для розробки
+
+**Поведінка:**
+
+- Перевірка в `Application.onCreate` і при `onResume` (root можуть увімкнути під час сесії).
+- Якщо root виявлено → `RootWarningScreen` (M3, іконка warning, пояснення uk/en, кнопка «Вийти» / `finish()`).
+- `NotificationListenerService` не реєструється активно; якщо дозвіл уже був — показати інструкцію вимкнути listener в системних налаштуваннях.
+- Опис у Google Play: «Не підтримує рутовані пристрої».
+
+**Чесне обмеження:** визначені приховані root / custom ROM можуть обійти евристику; мета — стандартні сценарії Magisk/su, не війна з усіма модами.
 
 ### 5.5 DI та архітектура
 
 - **Hilt** — `SingletonComponent`, модулі `DatabaseModule`, `SecurityModule`, `CoroutineModule`.
-- **Use cases:** `SaveNotificationUseCase`, `ApplyBlacklistUseCase`, `UnlockAppUseCase`, `PurgeOldMediaUseCase`.
+- **Use cases:** `SaveNotificationUseCase`, `ApplyBlacklistUseCase`, `UnlockAppUseCase`, `PurgeOldMediaUseCase`, `WipeAllDataUseCase`, `CheckRootStatusUseCase`.
 - **Тести:** unit для parser/grouping; instrumented для DAO (in-memory / test SQLCipher).
 
 ---
@@ -190,11 +241,14 @@ Gradle (`build.gradle.kts`):
 | Батарея | Без періодичного polling; лише callback listener |
 | OEM | Foreground service notification «Журнал активний» — toggle в налаштуваннях |
 | Доступність | TalkBack для feed; contentDescription на іконках |
+| Анти-підбір | Максимум 10 невдалих unlock (PIN + біометрія разом), далі secure wipe |
+| Root | Блокування UI + відсутність збору нотіфікацій |
 
 ---
 
 ## 8. Обмеження платформи (чесно)
 
+- **Рутовані пристрої не підтримуються** — додаток показує попередження і не веде журнал.
 - Потрібен ручний дозвіл «Доступ до сповіщень» — без цього додаток не працює.
 - Деякі додатки використовують `secret` / custom layout — парсинг може бути неповним.
 - На Android 13+ власні notification channels для статусу сервісу.
@@ -218,8 +272,9 @@ Gradle (`build.gradle.kts`):
 - [ ] `LICENSE` (Apache 2.0), `docs/PRIVACY.md`, baseline `README`
 - [ ] CI: `assembleDebug`, `lint`, `test` (GitHub Actions)
 - [ ] Signing config для release з `.env` / `upload-keystore.properties`
+- [ ] `RootDetector` + `RootWarningScreen`; `ALLOW_ROOT_FOR_DEBUG` лише в debug
 
-**Критерій готовності:** `./gradlew assembleDebug` проходить; порожній Compose `MainActivity` з темою M3.
+**Критерій готовності:** `./gradlew assembleDebug` проходить; на емуляторі без root — Compose `MainActivity`; з root (тестовий образ) — лише warning screen.
 
 ---
 
@@ -266,8 +321,11 @@ Gradle (`build.gradle.kts`):
 - [ ] `LockScreen` gate: NavHost з start destination = Lock until unlocked
 - [ ] Timeout background lock (Lifecycle + `ProcessLifecycleOwner`)
 - [ ] Optional `FLAG_SECURE`
+- [ ] `failedUnlockAttempts`: спільний лічильник PIN + біометрія; UI «N спроб залишилось»
+- [ ] `WipeAllDataUseCase` на 10-й невдачі (БД, файли, prefs, Keystore)
+- [ ] Онбординг: згода з політикою стирання; екран після wipe
 
-**Критерій:** `adb backup` / raw DB на root не показує plaintext title/body.
+**Критерій:** 10 невірних PIN підряд знищують дані і повертають на setup; біометрія теж інкрементує лічильник; на root-пристрої feed недоступний.
 
 ---
 
@@ -277,7 +335,7 @@ Gradle (`build.gradle.kts`):
 
 - [ ] Retention job (`WorkManager`) — prune старих записів і файлів
 - [ ] Пошук у feed, фільтр за package
-- [ ] Онбординг illustrations, accessibility pass
+- [ ] Онбординг illustrations, accessibility pass (включно з root warning і 10-attempt policy)
 - [ ] Локалізація: uk, en (strings.xml)
 - [ ] `docs/PRIVACY.md` + Store listing (uk/en)
 - [ ] Data safety, content rating, notification listener declaration
@@ -325,6 +383,9 @@ android-notification-history/
 | Великий обсяг медіа | Ліміт розміру, retention, стиснення JPEG/WebP |
 | Витік PIN через accessibility | Custom numpad, `FLAG_SECURE`, не логувати PIN |
 | SQLCipher + Room міграції | Тести міграцій, версіонування schema |
+| Підбір PIN офлайн | 10 спроб → secure wipe; лічильник у захищеному сховищі |
+| Root обходить шифрування | Відмова в роботі на root; повторна перевірка on resume |
+| Випадкове стирання | Явна згода при онбордингу; показ залишку спроб на lock |
 
 ---
 
@@ -334,8 +395,10 @@ android-notification-history/
 2. Групи та оновлення не ламають feed.
 3. Blacklist працює для нових подій.
 4. Без unlock немає доступу до feed.
-5. БД і файли зашифровані; секрети не в git.
-6. Додаток проходить lint, тести, internal Play track.
+5. Після 10 невдалих спроб (PIN або біометрія) — повне стирання, без відновлення.
+6. На рутованому пристрої — блокуючий екран, listener не збирає дані.
+7. БД і файли зашифровані; секрети не в git.
+8. Додаток проходить lint, тести, internal Play track.
 
 ---
 
