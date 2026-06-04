@@ -19,6 +19,10 @@ fun LockScreen(
     onPinEntered: (String) -> Unit,
     onBiometricClick: () -> Unit
 ) {
+    LaunchedEffect(showBiometric) {
+        if (showBiometric) onBiometricClick()
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
