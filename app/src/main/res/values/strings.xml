@@ -1,4 +1,19 @@
 <resources>
     <string name="app_name">Notification History</string>
     <string name="service_name">Notification History Listener</string>
+
+    <string name="permission_title">Notification access required</string>
+    <string name="permission_body">Enable Notification History in system settings so the app can save your notifications locally. Nothing is sent over the internet.</string>
+    <string name="permission_open_settings">Open notification access settings</string>
+    <string name="permission_granted_hint">Access enabled — continuing…</string>
+
+    <string name="feed_title">Notification History</string>
+    <string name="feed_empty">No notifications yet. Grant access and trigger a test notification.</string>
+
+    <string name="detail_title">Details</string>
+    <string name="detail_back">Back</string>
+    <string name="detail_app_icon">App icon</string>
+    <string name="detail_channel">Channel: %1$s</string>
+    <string name="detail_no_title">No title</string>
+    <string name="detail_no_text">No text</string>
 </resources>

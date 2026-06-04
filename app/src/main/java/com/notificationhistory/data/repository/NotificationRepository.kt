@@ -12,6 +12,8 @@ class NotificationRepository @Inject constructor(
 ) {
     val allNotifications: Flow<List<NotificationEvent>> = notificationDao.getAllNotifications()
 
+    fun observeNotification(id: Long): Flow<NotificationEvent?> = notificationDao.observeById(id)
+
     suspend fun upsertNotification(event: NotificationEvent) {
         val existing = notificationDao.getByStableKey(event.stableKey)
         if (existing != null) {

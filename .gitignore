@@ -32,3 +32,6 @@ Thumbs.db
 
 # Kotlin
 .kotlin/
+
+# JVM crash dumps
+*.hprof

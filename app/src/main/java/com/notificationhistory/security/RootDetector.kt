@@ -1,10 +1,12 @@
 package com.notificationhistory.security
 
 import android.os.Build
+import com.notificationhistory.BuildConfig
 import java.io.File
 
 object RootDetector {
     fun isRooted(): Boolean {
+        if (BuildConfig.ALLOW_ROOT_FOR_DEBUG) return false
         return checkRootMethod1() || checkRootMethod2() || checkRootMethod3()
     }
 

@@ -12,6 +12,9 @@ interface NotificationDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(event: NotificationEvent): Long
 
+    @Query("SELECT * FROM notification_events WHERE id = :id LIMIT 1")
+    fun observeById(id: Long): Flow<NotificationEvent?>
+
     @Query("SELECT * FROM notification_events WHERE stableKey = :key LIMIT 1")
     suspend fun getByStableKey(key: String): NotificationEvent?
 

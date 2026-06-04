@@ -305,17 +305,17 @@ Gradle (`build.gradle.kts`):
 
 **Ціль:** збірний скелет, політика секретів, без мережі.
 
-- [ ] Gradle Kotlin DSL: `app`, опційно `core:model`, `core:database`
-- [ ] Package `com.<org>.notificationhistory`
-- [ ] Min SDK 26, target / compile — latest stable
-- [ ] Jetpack Compose BOM, Material 3, Hilt, Room KSP, Coroutines
-- [ ] `.env` + `dotenv` / `BuildConfig` pipeline; `.env.example`, `.gitignore`
-- [ ] `AndroidManifest`: **без** `INTERNET`; declaration `NotificationListenerService`
-- [ ] ProGuard rules для Room / SQLCipher
-- [ ] `LICENSE` (Apache 2.0), `docs/PRIVACY.md`, baseline `README`
-- [ ] CI: `assembleDebug`, `lint`, `test` (GitHub Actions)
-- [ ] Signing config для release з `.env` / `upload-keystore.properties`
-- [ ] `RootDetector` + `RootWarningScreen`; `ALLOW_ROOT_FOR_DEBUG` лише в debug
+- [x] Gradle Kotlin DSL: `app`, опційно `core:model`, `core:database`
+- [x] Package `com.notificationhistory`
+- [x] Min SDK 26, target / compile — latest stable
+- [x] Jetpack Compose BOM, Material 3, Hilt, Room KSP, Coroutines
+- [x] `.env` + `dotenv` / `BuildConfig` pipeline; `.env.example`, `.gitignore`
+- [x] `AndroidManifest`: **без** `INTERNET`; declaration `NotificationListenerService`
+- [x] ProGuard rules для Room / SQLCipher
+- [x] `LICENSE` (Apache 2.0), `docs/PRIVACY.md`, baseline `README`
+- [x] CI: `assembleDebug`, `lint`, `test` (GitHub Actions)
+- [x] Signing config для release з `.env` / `upload-keystore.properties`
+- [x] `RootDetector` + `RootWarningScreen`; `ALLOW_ROOT_FOR_DEBUG` лише в debug
 
 **Критерій готовності:** `./gradlew assembleDebug` проходить; на емуляторі без root — Compose `MainActivity`; з root (тестовий образ) — лише warning screen.
 
@@ -325,13 +325,13 @@ Gradle (`build.gradle.kts`):
 
 **Ціль:** збереження простих нотіфікацій і список на головному екрані.
 
-- [ ] `NotificationListenerService` + reconnect handling
-- [ ] `NotificationParser`: title, text, package, posted time, small icon → bitmap cache
-- [ ] Room: entities, DAO, `NotificationRepository`
-- [ ] Foreground / status UX: екран «Увімкніть доступ», якщо `!isNotificationListenerEnabled`
-- [ ] Compose **Feed**: `ViewModel` + `StateFlow`, `LazyColumn`, empty state
-- [ ] Navigation: Feed → Detail (базовий текст + іконка)
-- [ ] Unit-тести parser для `EXTRA_TITLE`, `EXTRA_TEXT`
+- [x] `NotificationListenerService` + reconnect handling
+- [x] `NotificationParser`: title, text, package, posted time, small icon → bitmap cache
+- [x] Room: entities, DAO, `NotificationRepository`
+- [x] Foreground / status UX: екран «Увімкніть доступ», якщо `!isNotificationListenerEnabled`
+- [x] Compose **Feed**: `ViewModel` + `StateFlow`, `LazyColumn`, empty state
+- [x] Navigation: Feed → Detail (базовий текст + іконка)
+- [x] Unit-тести parser для `EXTRA_TITLE`, `EXTRA_TEXT`
 
 **Критерій:** після дозволу нові push з Telegram/Email з’являються в списку після перезапуску.
 

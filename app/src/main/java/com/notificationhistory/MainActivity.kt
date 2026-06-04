@@ -9,6 +9,7 @@ import com.notificationhistory.security.RootDetector
 import com.notificationhistory.ui.feed.FeedViewModel
 import com.notificationhistory.ui.navigation.AppNavGraph
 import com.notificationhistory.ui.root.RootWarningScreen
+import com.notificationhistory.ui.theme.NotificationHistoryTheme
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -25,13 +26,17 @@ class MainActivity : ComponentActivity() {
         
         if (RootDetector.isRooted()) {
             setContent {
-                RootWarningScreen(onExit = { finish() })
+                NotificationHistoryTheme {
+                    RootWarningScreen(onExit = { finish() })
+                }
             }
             return
         }
 
         setContent {
-            AppNavGraph(authManager = authManager, feedViewModel = feedViewModel)
+            NotificationHistoryTheme {
+                AppNavGraph(authManager = authManager, feedViewModel = feedViewModel)
+            }
         }
     }
 }

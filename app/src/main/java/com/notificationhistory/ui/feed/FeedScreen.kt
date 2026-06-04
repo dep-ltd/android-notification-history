@@ -1,5 +1,6 @@
 package com.notificationhistory.ui.feed
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -11,23 +12,28 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.notificationhistory.R
 import com.notificationhistory.data.entities.NotificationEvent
+import androidx.compose.ui.res.stringResource
 import java.text.SimpleDateFormat
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FeedScreen(viewModel: FeedViewModel) {
+fun FeedScreen(
+    viewModel: FeedViewModel,
+    onNotificationClick: (Long) -> Unit
+) {
     val notifications by viewModel.notifications.collectAsState()
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Notification History") })
+            TopAppBar(title = { Text(stringResource(R.string.feed_title)) })
         }
     ) { padding ->
         if (notifications.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = androidx.compose.ui.Alignment.Center) {
-                Text("No notifications yet")
+                Text(stringResource(R.string.feed_empty))
             }
         } else {
             LazyColumn(
@@ -35,8 +41,11 @@ fun FeedScreen(viewModel: FeedViewModel) {
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(notifications) { event ->
-                    NotificationItem(event)
+                items(notifications, key = { it.id }) { event ->
+                    NotificationItem(
+                        event = event,
+                        onClick = { onNotificationClick(event.id) }
+                    )
                 }
             }
         }
@@ -44,9 +53,14 @@ fun FeedScreen(viewModel: FeedViewModel) {
 }
 
 @Composable
-fun NotificationItem(event: NotificationEvent) {
+fun NotificationItem(
+    event: NotificationEvent,
+    onClick: () -> Unit
+) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
