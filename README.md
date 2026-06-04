@@ -28,6 +28,7 @@
 - **Анти-підбір** — спільний лічильник невдалих спроб PIN і біометрії; після **10** помилок — безповоротне видалення БД, медіа, налаштувань і ключів (див. [`docs/PROJECT_IDEA.md` §5.4.1](docs/PROJECT_IDEA.md)).
 - **Без root** — на рутованому пристрої додаток не запускає listener і не показує журнал; лише екран попередження з поясненням.
 - **Шифрування at rest** — БД і чутливі файли; ключі не вшиваються в репозиторій (див. `.env`).
+- **Великі екрани та fold** (фаза 6) — list-detail для журналу й деталей, master-detail для налаштувань за [Material adaptive layouts](https://developer.android.com/develop/ui/compose/layouts/adaptive).
 
 ---
 
@@ -126,6 +127,8 @@ app/
 | 2 | Групи, оновлення, медіа |
 | 3 | Шифрування, lock, 10-attempt wipe, root block |
 | 4 | Налаштування, polish, Play |
+| 5 | Опційно: export, віджет, Wear, OEM guide |
+| 6 | Foldable / планшети: list-detail для feed, detail, settings (M3 adaptive) |
 
 ---
 

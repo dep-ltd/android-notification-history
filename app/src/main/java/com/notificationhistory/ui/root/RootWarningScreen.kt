@@ -32,13 +32,13 @@ fun RootWarningScreen(onExit: () -> Unit) {
             Spacer(modifier = Modifier.height(24.dp))
             Text(
                 text = "Root Detected",
-                style = MaterialTheme.colorScheme.headlineMedium,
+                style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.onErrorContainer
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = "For security reasons, this app cannot run on rooted devices. Please use a non-rooted device to protect your notification history.",
-                style = MaterialTheme.colorScheme.bodyLarge,
+                style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onErrorContainer
             )

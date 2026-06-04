@@ -122,6 +122,49 @@ NotificationListenerService (системний)
 
 **Дизайн:** Material 3 (`MaterialTheme`, `TopAppBar`, `NavigationBar` за потреби), типографіка M3, **dynamic color** (Monet), підтримка dark/light, **edge-to-edge** (`WindowInsets`), ripple, `AnimatedVisibility` для expand груп.
 
+#### 5.2.1 Адаптивний UI (foldable, планшети) — фаза 6
+
+Орієнтир: [Large screens & foldables](https://developer.android.com/develop/ui/compose/layouts/adaptive), [List-detail](https://developer.android.com/develop/ui/compose/layouts/adaptive/list-detail), Material 3 **canonical layouts**.
+
+| Клас вікна (`WindowSizeClass`) | Ширина (typ.) | Навігація | Feed + Detail | Налаштування |
+|-------------------------------|---------------|-----------|---------------|--------------|
+| **Compact** | телефон, cover display | `NavigationBar` або top-level tabs | Один стек: Feed → Detail (push) | Один стек: категорії → екран опції |
+| **Medium** | fold unfolded, малі планшети | `NavigationRail` (опційно) | **List-detail**: список ~40%, detail ~60% | Master-detail: список розділів + контент |
+| **Expanded** | планшет, desktop mode | `NavigationRail` + більші відступи | List-detail; detail з двоколонковим контентом (мета + медіа) | Master-detail; app picker у другій панелі |
+
+**Стек бібліотек (фаза 6):**
+
+- `androidx.compose.material3.adaptive` — `ListDetailPaneScaffold`, `SupportingPaneScaffold` (де доречно)
+- `androidx.compose.material3.adaptive.navigation` — `NavigationSuiteScaffold` (bar ↔ rail за шириною)
+- `androidx.window:window` + `WindowInfoTracker` — fold posture, `FoldingFeature` (hinge)
+- `WindowSizeClass` з `currentWindowAdaptiveInfo()` — єдине джерело правди для layout
+
+**Feed (список нотіфікацій):**
+
+- Compact: повноширинний `LazyColumn`, sticky date headers, групи expand/collapse як зараз.
+- Medium/Expanded: той самий список у **primary pane**; при виборі елемента — detail у **secondary pane** (без втрати scroll position).
+- Порожній detail: placeholder «Оберіть сповіщення» (M3 empty state).
+- Hinge: `Modifier.padding()` від `FoldingFeature.occlusionBounds` — не класти FAB/важливі кнопки на згин.
+
+**Detail (детальна сторінка):**
+
+- Compact: повноекранний `Scaffold` + `TopAppBar` з back.
+- Medium+: detail у secondary pane; top bar без back (вибір у списку); на Expanded — рядок метаданих (іконка, package, час) + нижче текст/галерея в `FlowRow` або дві колонки.
+- Зображення: `HorizontalPager` на compact; на expanded — сітка прев’ю + zoom.
+
+**Налаштування:**
+
+- Compact: `LazyColumn` секцій (Безпека, Додатки, Дані, Про).
+- Medium+: **ліва панель** — секції/пункти; **права** — вміст (PIN, біометрія, blacklist, retention).
+- App picker (blacklist): на Expanded — пошук + список у supporting pane без перекриття всього екрана.
+
+**Маніфест / activity:**
+
+- `android:resizeableActivity="true"`, `configChanges` з `screenSize|smallestScreenSize|screenLayout` (мінімально необхідне).
+- Тест: Foldable emulator (7.6" Fold-in), планшет 10", **Desktop window** на fold.
+
+**Не ціль фази 6:** окремий UX для Wear OS (залишається в фазі 5 як опція).
+
 ### 5.3 Зберігання
 
 - **Room** 2.x, KSP, Flow для feed.
@@ -345,12 +388,34 @@ Gradle (`build.gradle.kts`):
 
 ---
 
-### Фаза 5 — Опційно після v1
+### Фаза 5 — Опційно після v1 (не fold)
 
 - Зашифрований локальний export/import (файл + QR passphrase offline)
 - Віджет «останні 3»
-- Wear OS / планшет dual pane
+- Wear OS companion (мінімальний перегляд)
 - Aggressive OEM battery whitelist guide в UI
+
+---
+
+### Фаза 6 — Foldable та великі екрани (2–3 тижні)
+
+**Ціль:** адаптивний layout за офіційними гайдлайнами Android / Material 3 для **feed**, **detail** і **settings** (див. §5.2.1).
+
+- [ ] Залежності: `material3-adaptive`, `window`, `adaptive-navigation-suite`
+- [ ] `WindowSizeClass` + `NavigationSuiteScaffold` на root (bar / rail)
+- [ ] **Feed + Detail:** `ListDetailPaneScaffold` — compact = single pane; medium/expanded = list-detail з shared `ViewModel` / selected id
+- [ ] Placeholder у secondary pane, збереження стану списку при зміні fold
+- [ ] **Detail:** адаптивний layout (одна / дві колонки, галерея зображень)
+- [ ] **Settings:** master-detail на medium+; compact — існуючий однопанельний flow
+- [ ] **App picker (blacklist):** supporting pane або full-width на compact
+- [ ] Hinge: обробка `WindowLayoutInfo` / відступи, без критичного UI на згині
+- [ ] `resizeableActivity`, перевірка fold/posture у `AndroidManifest`
+- [ ] Preview: `@Preview(device = Devices.FOLDABLE)` + планшет; instrumented screenshot tests (опційно)
+- [ ] Ручний тест: Fold emulator, Galaxy Fold / Pixel Fold (якщо доступно), зміна орієнтації та half-opened
+
+**Критерій:** на unfolded fold користувач бачить список і деталь одночасно; на телефоні — як раніше (стек); налаштування на планшеті — дві панелі без «розтягнутого» телефонного UI; немає регресії на compact.
+
+**Визначення готовності v1.1 (large screens):** пункти 1–8 з §12 збережені + list-detail на width ≥ medium для feed/detail/settings.
 
 ---
 
@@ -386,6 +451,8 @@ android-notification-history/
 | Підбір PIN офлайн | 10 спроб → secure wipe; лічильник у захищеному сховищі |
 | Root обходить шифрування | Відмова в роботі на root; повторна перевірка on resume |
 | Випадкове стирання | Явна згода при онбордингу; показ залишку спроб на lock |
+| Поганий UX на fold | Фаза 6: `ListDetailPaneScaffold`, тести на Fold emulator |
+| Стан при згині/повороті | `rememberSaveable` selected id; ViewModel не скидає feed |
 
 ---
 
