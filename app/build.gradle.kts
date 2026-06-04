@@ -28,11 +28,11 @@ fun envOrLocalProperty(key: String): String? {
 }
 
 android {
-    namespace = "com.notificationhistory"
+    namespace = "com.depsoftware.notifhistory"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.notificationhistory"
+        applicationId = "com.depsoftware.notifhistory"
         minSdk = 26
         targetSdk = 34
         versionCode = 1
@@ -110,6 +110,7 @@ android {
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.process)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))

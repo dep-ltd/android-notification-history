@@ -26,6 +26,9 @@ out/
 *.keystore
 upload-keystore.properties
 
+# Claude Code memory (project-local, not for repo)
+.claude/
+
 # OS
 .DS_Store
 Thumbs.db
