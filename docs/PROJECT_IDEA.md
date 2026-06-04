@@ -376,13 +376,13 @@ Gradle (`build.gradle.kts`):
 
 **Ціль:** реліз у Store.
 
-- [ ] Retention job (`WorkManager`) — prune старих записів і файлів
-- [ ] Пошук у feed, фільтр за package
-- [ ] Онбординг illustrations, accessibility pass (включно з root warning і 10-attempt policy)
-- [ ] Локалізація: uk, en (strings.xml)
-- [ ] `docs/PRIVACY.md` + Store listing (uk/en)
-- [ ] Data safety, content rating, notification listener declaration
-- [ ] Release build, internal testing track, bugfix OEM (Xiaomi, Samsung)
+- [x] Retention job (`WorkManager`) — prune старих записів і файлів
+- [x] Пошук у feed, фільтр за package
+- [x] Онбординг illustrations, accessibility pass (включно з root warning і 10-attempt policy)
+- [x] Локалізація: uk, en (strings.xml)
+- [x] `docs/PRIVACY.md` + Store listing (uk/en)
+- [x] Data safety, content rating, notification listener declaration
+- [x] Release build, internal testing track, bugfix OEM (Xiaomi, Samsung)
 
 **Критерій:** успішна internal testing, відсутність INTERNET у merged manifest, пройдений checklist Play.
 

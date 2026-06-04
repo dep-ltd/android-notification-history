@@ -128,7 +128,9 @@ dependencies {
 
     // Hilt
     implementation(libs.hilt.android)
+    implementation(libs.hilt.work)
     ksp(libs.hilt.compiler)
+    ksp(libs.androidx.hilt.compiler)
 
     // Security (phase 3 wiring; dependency declared in phase 0)
     implementation(libs.sqlcipher)

@@ -7,8 +7,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.notificationhistory.R
 
 @Composable
 fun RootWarningScreen(onExit: () -> Unit) {
@@ -25,19 +27,19 @@ fun RootWarningScreen(onExit: () -> Unit) {
         ) {
             Icon(
                 imageVector = Icons.Default.Warning,
-                contentDescription = null,
+                contentDescription = stringResource(R.string.root_warning_icon_desc),
                 modifier = Modifier.size(64.dp),
                 tint = MaterialTheme.colorScheme.error
             )
             Spacer(modifier = Modifier.height(24.dp))
             Text(
-                text = "Root Detected",
+                text = stringResource(R.string.root_warning_title),
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.onErrorContainer
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = "For security reasons, this app cannot run on rooted devices. Please use a non-rooted device to protect your notification history.",
+                text = stringResource(R.string.root_warning_body),
                 style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onErrorContainer
@@ -49,7 +51,7 @@ fun RootWarningScreen(onExit: () -> Unit) {
                     containerColor = MaterialTheme.colorScheme.error
                 )
             ) {
-                Text("Exit App")
+                Text(stringResource(R.string.root_warning_exit))
             }
         }
     }

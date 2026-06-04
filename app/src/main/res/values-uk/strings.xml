@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Notification History</string>
+    <string name="service_name">Слухач Notification History</string>
+
+    <string name="permission_title">Потрібен доступ до сповіщень</string>
+    <string name="permission_body">Увімкніть Notification History у системних налаштуваннях, щоб зберігати сповіщення локально. Дані не передаються в інтернет.</string>
+    <string name="permission_open_settings">Відкрити налаштування доступу</string>
+    <string name="permission_granted_hint">Доступ увімкнено — продовжуємо…</string>
+
+    <string name="feed_title">Журнал сповіщень</string>
+    <string name="feed_empty">Ще немає сповіщень. Надайте доступ і надішліть тестове сповіщення.</string>
+    <string name="feed_group_count">%1$d повідомлень у групі</string>
+    <string name="feed_expand_group">Розгорнути групу</string>
+    <string name="feed_collapse_group">Згорнути групу</string>
+    <string name="feed_updated_badge">Оновлено</string>
+    <string name="feed_search_hint">Пошук у журналі</string>
+    <string name="feed_filter_all">Усі додатки</string>
+
+    <string name="detail_title">Деталі</string>
+    <string name="detail_back">Назад</string>
+    <string name="detail_app_icon">Іконка додатку</string>
+    <string name="detail_image">Зображення вкладення</string>
+    <string name="detail_channel">Канал: %1$s</string>
+    <string name="detail_no_title">Без заголовка</string>
+    <string name="detail_no_text">Без тексту</string>
+    <string name="detail_open_link">Відкрити посилання</string>
+    <string name="detail_updated_at">Оновлено: %1$s</string>
+
+    <string name="settings_title">Налаштування</string>
+    <string name="settings_section_apps">Додатки</string>
+    <string name="settings_ignore_apps">Ігнорувати додатки</string>
+    <string name="settings_ignore_apps_hint">Сповіщення обраних додатків не зберігатимуться.</string>
+
+    <string name="app_picker_title">Ігнорувати додатки</string>
+    <string name="app_picker_search">Пошук додатків</string>
+
+    <string name="consent_title">Політика безпеки</string>
+    <string name="consent_body">Після 10 невдалих спроб розблокування (PIN або біометрія) вся історія, медіа та ключі будуть безповоротно видалені на цьому пристрої.</string>
+    <string name="consent_continue">Продовжити</string>
+    <string name="pin_setup_wipe_consent">Я розумію: 10 невдалих спроб розблокування назавжди знищать усі дані додатку.</string>
+    <string name="pin_setup_create">Створіть 6-значний PIN</string>
+    <string name="pin_setup_confirm">Підтвердіть PIN</string>
+    <string name="pin_setup_mismatch">PIN не збігаються. Спробуйте знову.</string>
+
+    <string name="lock_enter_pin">Введіть PIN</string>
+    <string name="lock_attempts_left">Залишилось спроб: %1$d</string>
+    <string name="lock_use_biometric">Біометрія</string>
+
+    <string name="biometric_title">Розблокування Notification History</string>
+    <string name="biometric_subtitle">Підтвердіть особу</string>
+    <string name="biometric_use_pin">Використати PIN</string>
+
+    <string name="wipe_complete_title">Дані знищено</string>
+    <string name="wipe_complete_body">Історію та ключі шифрування знищено після занадто багатьох невдалих спроб. Створіть новий PIN.</string>
+    <string name="wipe_complete_continue">Налаштувати знову</string>
+
+    <string name="settings_section_data">Дані</string>
+    <string name="settings_retention">Зберігати історію %1$d днів</string>
+    <string name="settings_retention_hint">Старі записи та файли видаляються автоматично раз на добу.</string>
+    <string name="settings_clear_history">Очистити всю історію</string>
+    <string name="settings_clear_history_title">Видалити всю історію?</string>
+    <string name="settings_clear_history_message">Усі збережені сповіщення та зображення на пристрої будуть видалені безповоротно.</string>
+    <string name="settings_clear_history_confirm">Видалити</string>
+    <string name="settings_clear_history_cancel">Скасувати</string>
+    <string name="settings_lock_timeout">Блокування після фону</string>
+    <string name="settings_lock_immediate">Одразу</string>
+    <string name="settings_lock_1min">1 хвилина</string>
+    <string name="settings_lock_5min">5 хвилин</string>
+    <string name="settings_section_security">Безпека</string>
+    <string name="settings_biometric">Розблокування біометрією</string>
+    <string name="settings_biometric_hint">Відбиток або обличчя, якщо доступно.</string>
+    <string name="settings_biometric_unavailable">Біометрія недоступна на цьому пристрої.</string>
+
+    <string name="root_warning_icon_desc">Попередження про root</string>
+    <string name="root_warning_title">Виявлено root</string>
+    <string name="root_warning_body">З міркувань безпеки додаток не працює на рутованих пристроях. Використовуйте пристрій без root.</string>
+    <string name="root_warning_exit">Вийти</string>
+</resources>

@@ -16,7 +16,7 @@
 
 Повний опис продукту, архітектури та **пофазовий план** — у [`docs/PROJECT_IDEA.md`](docs/PROJECT_IDEA.md).
 
-**Стан імплементації:** фази **0–3** реалізовані в `main` (фундамент, listener/feed, групи/медіа/settings, шифрування та lock). Далі — фаза 4 (Play polish).
+**Стан імплементації:** фази **0–4** реалізовані в `main`. Далі — фаза 5 (опційно) / фаза 6 (foldables).
 
 ---
 
@@ -105,7 +105,7 @@ CI: [`.github/workflows/android.yml`](.github/workflows/android.yml).
 | 1 | ✅ Listener, parser, feed, detail |
 | 2 | ✅ Групи, медіа, blacklist, settings |
 | 3 | ✅ SQLCipher, lock, wipe, біометрія |
-| 4 | ⏳ Play polish, retention, i18n |
+| 4 | ✅ Retention, пошук, uk/en, Play docs |
 | 5–6 | ⏳ Опційно / foldables |
 
 ---

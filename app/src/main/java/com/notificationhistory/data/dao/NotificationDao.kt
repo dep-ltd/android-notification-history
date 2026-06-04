@@ -35,4 +35,13 @@ interface NotificationDao {
 
     @Query("DELETE FROM notification_events")
     suspend fun deleteAll()
+
+    @Query("SELECT * FROM notification_events WHERE postedAt < :cutoffMs")
+    suspend fun getOlderThan(cutoffMs: Long): List<NotificationEvent>
+
+    @Query("DELETE FROM notification_events WHERE postedAt < :cutoffMs")
+    suspend fun deleteOlderThan(cutoffMs: Long)
+
+    @Query("SELECT DISTINCT packageName FROM notification_events ORDER BY packageName ASC")
+    fun observeDistinctPackages(): Flow<List<String>>
 }

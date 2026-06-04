@@ -8,9 +8,13 @@ import androidx.activity.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.ProcessLifecycleOwner
+import com.notificationhistory.data.preferences.SettingsManager
 import com.notificationhistory.security.AppSessionManager
 import com.notificationhistory.security.AuthManager
 import com.notificationhistory.security.RootDetector
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import com.notificationhistory.ui.feed.FeedViewModel
 import com.notificationhistory.ui.navigation.AppNavGraph
 import com.notificationhistory.ui.root.RootWarningScreen
@@ -27,6 +31,9 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var sessionManager: AppSessionManager
 
+    @Inject
+    lateinit var settingsManager: SettingsManager
+
     private val feedViewModel: FeedViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,6 +42,12 @@ class MainActivity : ComponentActivity() {
             WindowManager.LayoutParams.FLAG_SECURE,
             WindowManager.LayoutParams.FLAG_SECURE
         )
+
+        lifecycleScope.launch {
+            settingsManager.lockTimeoutMinutesFlow.collectLatest { minutes ->
+                sessionManager.setLockTimeoutMinutes(minutes)
+            }
+        }
 
         ProcessLifecycleOwner.get().lifecycle.addObserver(
             LifecycleEventObserver { _, event ->

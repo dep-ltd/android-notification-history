@@ -4,6 +4,7 @@ import com.notificationhistory.data.DatabaseHolder
 import com.notificationhistory.data.entities.NotificationEvent
 import com.notificationhistory.data.entities.NotificationEventType
 import com.notificationhistory.data.preferences.SettingsManager
+import com.notificationhistory.util.MediaStorage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
@@ -13,7 +14,8 @@ import javax.inject.Singleton
 @Singleton
 class NotificationRepository @Inject constructor(
     private val databaseHolder: DatabaseHolder,
-    private val settingsManager: SettingsManager
+    private val settingsManager: SettingsManager,
+    private val mediaStorage: MediaStorage
 ) {
     private val notificationDao get() = databaseHolder.get().notificationDao()
 
@@ -25,6 +27,26 @@ class NotificationRepository @Inject constructor(
         }
 
     fun observeNotification(id: Long): Flow<NotificationEvent?> = notificationDao.observeById(id)
+
+    fun observeDistinctPackages(): Flow<List<String>> = notificationDao.observeDistinctPackages()
+
+    suspend fun pruneExpiredNotifications() {
+        val retentionDays = settingsManager.getRetentionDays()
+        val cutoff = System.currentTimeMillis() - retentionDays * 24L * 60L * 60L * 1000L
+        val expired = notificationDao.getOlderThan(cutoff)
+        expired.forEach { event ->
+            event.mediaPaths.forEach { path -> mediaStorage.deleteFile(path) }
+        }
+        notificationDao.deleteOlderThan(cutoff)
+    }
+
+    suspend fun clearAllHistory() {
+        val all = notificationDao.getOlderThan(Long.MAX_VALUE)
+        all.forEach { event ->
+            event.mediaPaths.forEach { path -> mediaStorage.deleteFile(path) }
+        }
+        notificationDao.deleteAll()
+    }
 
     suspend fun upsertNotification(incoming: NotificationEvent) {
         val existing = notificationDao.getByStableKey(incoming.stableKey)

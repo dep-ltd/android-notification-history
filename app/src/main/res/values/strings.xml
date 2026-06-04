@@ -13,6 +13,8 @@
     <string name="feed_expand_group">Expand group</string>
     <string name="feed_collapse_group">Collapse group</string>
     <string name="feed_updated_badge">Updated</string>
+    <string name="feed_search_hint">Search notifications</string>
+    <string name="feed_filter_all">All apps</string>
 
     <string name="detail_title">Details</string>
     <string name="detail_back">Back</string>
@@ -52,8 +54,25 @@
     <string name="wipe_complete_body">All notification history and encryption keys were destroyed after too many failed unlock attempts. Set up a new PIN to continue.</string>
     <string name="wipe_complete_continue">Set up again</string>
 
+    <string name="settings_section_data">Data</string>
+    <string name="settings_retention">Keep history for %1$d days</string>
+    <string name="settings_retention_hint">Older entries and media are removed automatically once per day.</string>
+    <string name="settings_clear_history">Clear all history</string>
+    <string name="settings_clear_history_title">Delete all history?</string>
+    <string name="settings_clear_history_message">This permanently removes all saved notifications and images on this device.</string>
+    <string name="settings_clear_history_confirm">Delete</string>
+    <string name="settings_clear_history_cancel">Cancel</string>
+    <string name="settings_lock_timeout">Auto-lock after background</string>
+    <string name="settings_lock_immediate">Immediately</string>
+    <string name="settings_lock_1min">1 minute</string>
+    <string name="settings_lock_5min">5 minutes</string>
     <string name="settings_section_security">Security</string>
     <string name="settings_biometric">Unlock with biometric</string>
     <string name="settings_biometric_hint">Use fingerprint or face when available.</string>
     <string name="settings_biometric_unavailable">Biometric unlock is not available on this device.</string>
+
+    <string name="root_warning_icon_desc">Root detected warning</string>
+    <string name="root_warning_title">Root detected</string>
+    <string name="root_warning_body">For security, this app cannot run on rooted devices. Use a non-rooted device to protect your notification history.</string>
+    <string name="root_warning_exit">Exit app</string>
 </resources>
