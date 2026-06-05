@@ -84,7 +84,8 @@ class NotificationRepository @Inject constructor(
                 removedAt = null,
                 eventType = NotificationEventType.UPDATED.name,
                 summaryId = existing.summaryId ?: incoming.summaryId,
-                mediaPaths = mergeMediaPaths(existing.mediaPaths, incoming.mediaPaths)
+                mediaPaths = mergeMediaPaths(existing.mediaPaths, incoming.mediaPaths),
+                contentIntentUri = incoming.contentIntentUri ?: existing.contentIntentUri
             )
         } else {
             incoming.copy(eventType = NotificationEventType.POSTED.name)

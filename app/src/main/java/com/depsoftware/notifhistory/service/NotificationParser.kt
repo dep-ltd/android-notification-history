@@ -11,6 +11,7 @@ import android.os.Bundle
 import android.service.notification.StatusBarNotification
 import com.depsoftware.notifhistory.data.entities.NotificationEvent
 import com.depsoftware.notifhistory.util.MediaStorage
+import com.depsoftware.notifhistory.util.NotificationIntentExtractor
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -43,6 +44,7 @@ class NotificationParser @Inject constructor(
             groupKey = resolveGroupKey(sbn, notification),
             isGroupSummary = false,
             clickUri = parseClickUri(extras),
+            contentIntentUri = NotificationIntentExtractor.extractContentIntentUri(notification),
             mediaPaths = mediaPaths
         )
     }

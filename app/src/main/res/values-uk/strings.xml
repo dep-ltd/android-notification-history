@@ -20,6 +20,8 @@
     <string name="feed_updated_badge">Оновлено</string>
     <string name="feed_search_hint">Пошук у журналі</string>
     <string name="feed_filter_all">Усі додатки</string>
+    <string name="action_open_notification">Відкрити дію сповіщення</string>
+    <string name="action_launch_failed">Не вдалося відкрити. Можливо, ціль більше недоступна.</string>
 
     <string name="detail_select_prompt">Оберіть сповіщення</string>
     <string name="detail_title">Деталі</string>
@@ -32,6 +34,8 @@
     <string name="detail_no_title">Без заголовка</string>
     <string name="detail_no_text">Без тексту</string>
     <string name="detail_open_link">Відкрити посилання</string>
+    <string name="detail_open_notification_action">Відкрити дію сповіщення</string>
+    <string name="detail_open_app">Відкрити додаток</string>
     <string name="detail_updated_at">Оновлено: %1$s</string>
     <string name="detail_received_at">Отримано: %1$s</string>
     <string name="detail_removed_at">Видалено: %1$s</string>

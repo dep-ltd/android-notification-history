@@ -19,6 +19,8 @@
     <string name="feed_updated_badge">Updated</string>
     <string name="feed_search_hint">Search notifications</string>
     <string name="feed_filter_all">All apps</string>
+    <string name="action_open_notification">Open notification action</string>
+    <string name="action_launch_failed">Could not open. The target may no longer be available.</string>
 
     <string name="detail_select_prompt">Select a notification</string>
     <string name="detail_title">Details</string>
@@ -31,6 +33,8 @@
     <string name="detail_no_title">No title</string>
     <string name="detail_no_text">No text</string>
     <string name="detail_open_link">Open link</string>
+    <string name="detail_open_notification_action">Open notification action</string>
+    <string name="detail_open_app">Open app</string>
     <string name="detail_updated_at">Updated: %1$s</string>
     <string name="detail_received_at">Received: %1$s</string>
     <string name="detail_removed_at">Removed: %1$s</string>

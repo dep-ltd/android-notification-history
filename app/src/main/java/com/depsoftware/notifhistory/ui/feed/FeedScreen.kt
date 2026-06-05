@@ -8,11 +8,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.Launch
 import androidx.compose.material.icons.outlined.NotificationsNone
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -20,6 +22,7 @@ import com.depsoftware.notifhistory.R
 import com.depsoftware.notifhistory.data.entities.NotificationEvent
 import com.depsoftware.notifhistory.data.entities.NotificationEventType
 import com.depsoftware.notifhistory.ui.components.AppIcon
+import com.depsoftware.notifhistory.util.NotificationLauncher
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -139,6 +142,8 @@ fun NotificationItem(
     val showUpdated = remember(event.id, event.eventType) {
         NotificationEventType.fromStored(event.eventType) == NotificationEventType.UPDATED
     }
+    val context = LocalContext.current
+    val openActionLabel = stringResource(R.string.action_open_notification)
 
     Surface(
         modifier = Modifier
@@ -166,11 +171,34 @@ fun NotificationItem(
                         maxLines = 1
                     )
                 }
-                Text(
-                    text = timeLabel,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = timeLabel,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    event.contentIntentUri?.let { intentUri ->
+                        IconButton(
+                            onClick = {
+                                NotificationLauncher.launchContentIntent(
+                                    context = context,
+                                    intentUri = intentUri,
+                                    packageName = event.packageName
+                                )
+                            },
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Launch,
+                                contentDescription = openActionLabel,
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                }
             }
             Spacer(modifier = Modifier.height(8.dp))
             Text(

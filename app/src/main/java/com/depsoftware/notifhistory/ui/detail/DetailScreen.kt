@@ -11,6 +11,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
+import androidx.compose.material.icons.outlined.Launch
 import androidx.compose.material3.*
 import com.depsoftware.notifhistory.ui.adaptive.isExpandedWidth
 import androidx.compose.runtime.Composable
@@ -33,6 +34,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.depsoftware.notifhistory.R
 import com.depsoftware.notifhistory.ui.components.AppIcon
+import com.depsoftware.notifhistory.util.NotificationLauncher
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -121,6 +123,7 @@ private fun DetailCompactLayout(
         DetailMediaSection(item, context)
         DetailContentCard(item)
         DetailMetaCard(item)
+        DetailActionButtons(item, context)
         item.clickUri?.let { DetailLinkButton(it, context) }
     }
 }
@@ -143,6 +146,7 @@ private fun DetailExpandedLayout(
         ) {
             DetailHeaderCard(item)
             DetailMetaCard(item)
+            DetailActionButtons(item, context)
             item.clickUri?.let { DetailLinkButton(it, context) }
         }
         Column(
@@ -330,6 +334,39 @@ private fun DetailMediaSection(
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun DetailActionButtons(item: NotificationEvent, context: android.content.Context) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        item.contentIntentUri?.let { intentUri ->
+            FilledTonalButton(
+                onClick = {
+                    NotificationLauncher.launchContentIntent(
+                        context = context,
+                        intentUri = intentUri,
+                        packageName = item.packageName
+                    )
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(Icons.Outlined.Launch, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(stringResource(R.string.detail_open_notification_action))
+            }
+        }
+        OutlinedButton(
+            onClick = { NotificationLauncher.launchApp(context, item.packageName) },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(stringResource(R.string.detail_open_app))
         }
     }
 }

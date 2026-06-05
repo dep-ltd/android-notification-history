@@ -20,5 +20,6 @@ data class NotificationEvent(
     val summaryId: Long? = null,
     val eventType: String = NotificationEventType.POSTED.name,
     val clickUri: String? = null,
+    val contentIntentUri: String? = null,
     val mediaPaths: List<String> = emptyList()
 )
