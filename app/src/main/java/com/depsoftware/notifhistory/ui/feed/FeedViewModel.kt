@@ -9,6 +9,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
@@ -37,17 +39,20 @@ class FeedViewModel @Inject constructor(
 
     val notifications: StateFlow<List<NotificationEvent>> = combine(
         repository.allNotifications,
-        searchQuery,
+        searchQuery.debounce(SEARCH_DEBOUNCE_MS),
         packageFilter
     ) { events, query, pkg ->
-        events
-            .filter { event -> matchesFilters(event, query, pkg) }
-            .sortedByDescending { it.postedAt }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
+        if (query.isBlank() && pkg == null) {
+            events
+        } else {
+            events.filter { event -> matchesFilters(event, query, pkg) }
+        }
+    }.distinctUntilChanged()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
     fun setSearchQuery(query: String) {
         searchQuery.value = query
@@ -71,5 +76,9 @@ class FeedViewModel @Inject constructor(
             event.appLabel,
             event.packageName
         ).any { it.lowercase().contains(q) }
+    }
+
+    companion object {
+        private const val SEARCH_DEBOUNCE_MS = 250L
     }
 }

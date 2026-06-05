@@ -26,7 +26,6 @@ import com.depsoftware.notifhistory.data.entities.NotificationEvent
 import com.depsoftware.notifhistory.data.entities.NotificationEventType
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -160,8 +159,7 @@ private fun DetailExpandedLayout(
 
 @Composable
 private fun DetailHeaderCard(item: NotificationEvent) {
-    val eventType = NotificationEventType.fromStored(item.eventType)
-    val removed = item.removedAt != null
+    val showUpdated = NotificationEventType.fromStored(item.eventType) == NotificationEventType.UPDATED
 
     Card(
         colors = CardDefaults.cardColors(
@@ -199,38 +197,17 @@ private fun DetailHeaderCard(item: NotificationEvent) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                item.removedAt?.let { removedAt ->
-                    Text(
-                        text = stringResource(R.string.detail_removed_at, formatDateTime(removedAt)),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
             }
         }
-        if (eventType == NotificationEventType.UPDATED || removed) {
+        if (showUpdated) {
             Row(
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp)
             ) {
-                if (eventType == NotificationEventType.UPDATED) {
-                    AssistChip(
-                        onClick = {},
-                        enabled = false,
-                        label = { Text(stringResource(R.string.feed_updated_badge)) }
-                    )
-                }
-                if (removed) {
-                    AssistChip(
-                        onClick = {},
-                        enabled = false,
-                        label = { Text(stringResource(R.string.detail_status_removed)) },
-                        colors = AssistChipDefaults.assistChipColors(
-                            disabledContainerColor = MaterialTheme.colorScheme.errorContainer,
-                            disabledLabelColor = MaterialTheme.colorScheme.onErrorContainer
-                        )
-                    )
-                }
+                AssistChip(
+                    onClick = {},
+                    enabled = false,
+                    label = { Text(stringResource(R.string.feed_updated_badge)) }
+                )
             }
         }
     }
@@ -238,7 +215,6 @@ private fun DetailHeaderCard(item: NotificationEvent) {
 
 @Composable
 private fun DetailContentCard(item: NotificationEvent) {
-    val removed = item.removedAt != null
     Card {
         Column(
             modifier = Modifier
@@ -254,14 +230,12 @@ private fun DetailContentCard(item: NotificationEvent) {
             Text(
                 text = item.title ?: stringResource(R.string.detail_no_title),
                 style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                textDecoration = if (removed) TextDecoration.LineThrough else null
+                fontWeight = FontWeight.Bold
             )
             Text(
                 text = item.text ?: stringResource(R.string.detail_no_text),
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textDecoration = if (removed) TextDecoration.LineThrough else null
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }

@@ -33,13 +33,7 @@ class NotificationHistoryListenerService : NotificationListenerService() {
     }
 
     override fun onNotificationRemoved(sbn: StatusBarNotification?) {
-        sbn?.let { notification ->
-            serviceScope.launch {
-                repository.markAsRemoved(
-                    NotificationParser.stableKey(notification.packageName, notification.key)
-                )
-            }
-        }
+        // Dismissals from the status bar are not tracked in history.
     }
 
     private fun syncActiveNotifications() {

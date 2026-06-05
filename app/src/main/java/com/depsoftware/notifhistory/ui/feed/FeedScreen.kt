@@ -15,7 +15,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.depsoftware.notifhistory.R
 import com.depsoftware.notifhistory.data.entities.NotificationEvent
@@ -40,6 +39,9 @@ fun FeedScreen(
     val selectedPackage by viewModel.packageFilterState.collectAsState()
     val hasActiveFilters by viewModel.hasActiveFilters.collectAsState()
     var searchText by remember { mutableStateOf("") }
+    val noTitle = stringResource(R.string.detail_no_title)
+    val noText = stringResource(R.string.detail_no_text)
+    val updatedBadge = stringResource(R.string.feed_updated_badge)
 
     Scaffold(
         modifier = modifier,
@@ -106,10 +108,14 @@ fun FeedScreen(
                 ) {
                     items(
                         items = notifications,
-                        key = { it.id }
+                        key = { it.id },
+                        contentType = { "notification" }
                     ) { event ->
                         NotificationItem(
                             event = event,
+                            noTitle = noTitle,
+                            noText = noText,
+                            updatedBadge = updatedBadge,
                             onClick = { onNotificationClick(event.id) }
                         )
                     }
@@ -120,80 +126,73 @@ fun FeedScreen(
 }
 
 @Composable
-fun NotificationItem(event: NotificationEvent, onClick: () -> Unit) {
-    Card(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-    ) {
-        Box(modifier = Modifier.padding(16.dp)) {
-            NotificationItemContent(event)
-        }
+fun NotificationItem(
+    event: NotificationEvent,
+    noTitle: String,
+    noText: String,
+    updatedBadge: String,
+    onClick: () -> Unit
+) {
+    val timeLabel = remember(event.id, event.postedAt) { formatFeedTime(event.postedAt) }
+    val title = event.title ?: noTitle
+    val text = event.text ?: noText
+    val showUpdated = remember(event.id, event.eventType) {
+        NotificationEventType.fromStored(event.eventType) == NotificationEventType.UPDATED
     }
-}
 
-@Composable
-private fun NotificationItemContent(event: NotificationEvent) {
-    val removed = event.removedAt != null
-    val eventType = NotificationEventType.fromStored(event.eventType)
-    Column {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        shape = MaterialTheme.shapes.medium,
+        tonalElevation = 1.dp,
+        color = MaterialTheme.colorScheme.surfaceContainerLow
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
             Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                AppIcon(packageName = event.packageName, size = 20.dp)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    AppIcon(packageName = event.packageName, size = 20.dp)
+                    Text(
+                        text = event.appLabel ?: event.packageName,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        maxLines = 1
+                    )
+                }
                 Text(
-                    text = event.appLabel ?: event.packageName,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary
+                    text = timeLabel,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = formatFeedTime(event.postedAt),
-                style = MaterialTheme.typography.labelSmall,
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 2
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = text,
+                style = MaterialTheme.typography.bodyMedium,
+                maxLines = 3,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = event.title ?: stringResource(R.string.detail_no_title),
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
-            textDecoration = if (removed) TextDecoration.LineThrough else null
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = event.text ?: stringResource(R.string.detail_no_text),
-            style = MaterialTheme.typography.bodyMedium,
-            maxLines = 3,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textDecoration = if (removed) TextDecoration.LineThrough else null
-        )
-        if (eventType == NotificationEventType.UPDATED || removed) {
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (eventType == NotificationEventType.UPDATED) {
-                    AssistChip(
-                        onClick = {},
-                        enabled = false,
-                        label = { Text(stringResource(R.string.feed_updated_badge)) }
-                    )
-                }
-                if (removed) {
-                    AssistChip(
-                        onClick = {},
-                        enabled = false,
-                        label = { Text(stringResource(R.string.detail_status_removed)) },
-                        colors = AssistChipDefaults.assistChipColors(
-                            disabledContainerColor = MaterialTheme.colorScheme.errorContainer,
-                            disabledLabelColor = MaterialTheme.colorScheme.onErrorContainer
-                        )
-                    )
-                }
+            if (showUpdated) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = updatedBadge,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.tertiary
+                )
             }
         }
     }
@@ -231,16 +230,18 @@ private fun FeedEmptyState(filtered: Boolean, modifier: Modifier = Modifier) {
     }
 }
 
+private val feedTimeTodayFormat = java.lang.ThreadLocal.withInitial {
+    SimpleDateFormat("HH:mm", Locale.getDefault())
+}
+private val feedTimeOtherFormat = java.lang.ThreadLocal.withInitial {
+    SimpleDateFormat("dd MMM, HH:mm", Locale.getDefault())
+}
+
 private fun formatFeedTime(timestamp: Long): String {
     val now = Calendar.getInstance()
     val posted = Calendar.getInstance().apply { timeInMillis = timestamp }
-    val pattern = if (
-        now.get(Calendar.YEAR) == posted.get(Calendar.YEAR) &&
+    val sameDay = now.get(Calendar.YEAR) == posted.get(Calendar.YEAR) &&
         now.get(Calendar.DAY_OF_YEAR) == posted.get(Calendar.DAY_OF_YEAR)
-    ) {
-        "HH:mm"
-    } else {
-        "dd MMM, HH:mm"
-    }
-    return SimpleDateFormat(pattern, Locale.getDefault()).format(Date(timestamp))
+    val format = if (sameDay) feedTimeTodayFormat.get() else feedTimeOtherFormat.get()
+    return format!!.format(Date(timestamp))
 }
