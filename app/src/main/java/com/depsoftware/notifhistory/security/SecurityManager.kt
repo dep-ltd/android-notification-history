@@ -67,15 +67,5 @@ class SecurityManager @Inject constructor(
         private const val SECURE_PREFS_NAME_PRIVATE = SECURE_PREFS_NAME
         private const val KEY_DB_PASSPHRASE = "db_passphrase"
         private const val PASSPHRASE_SIZE = 32
-
-        @Volatile
-        private var sqlCipherLoaded = false
-
-        fun loadSqlCipher() {
-            if (!sqlCipherLoaded) {
-                System.loadLibrary("sqlcipher")
-                sqlCipherLoaded = true
-            }
-        }
     }
 }

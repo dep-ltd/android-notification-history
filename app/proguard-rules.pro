@@ -11,11 +11,10 @@
 -dontwarn androidx.room.paging.**
 
 # ─────────────────────────────────────────────────────────────────
-# SQLCipher
+# SQLCipher (net.zetetic:sqlcipher-android 4.5.6+)
 # ─────────────────────────────────────────────────────────────────
--keep class net.sqlcipher.** { *; }
--keep class net.sqlcipher.database.** { *; }
--dontwarn net.sqlcipher.**
+-keep class net.zetetic.database.** { *; }
+-dontwarn net.zetetic.database.**
 
 # ─────────────────────────────────────────────────────────────────
 # Hilt — DI graph, ViewModels, entry points, modules

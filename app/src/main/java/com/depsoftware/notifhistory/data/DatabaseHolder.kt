@@ -5,7 +5,7 @@ import android.database.sqlite.SQLiteException
 import androidx.room.Room
 import com.depsoftware.notifhistory.security.SecurityManager
 import dagger.hilt.android.qualifiers.ApplicationContext
-import net.sqlcipher.database.SupportFactory
+import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
 import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -60,7 +60,6 @@ class DatabaseHolder @Inject constructor(
     }
 
     private fun buildDatabase(): AppDatabase {
-        SecurityManager.loadSqlCipher()
         val builder = Room.databaseBuilder(
             context,
             AppDatabase::class.java,
@@ -68,7 +67,7 @@ class DatabaseHolder @Inject constructor(
         ).fallbackToDestructiveMigration()
 
         builder.openHelperFactory(
-            SupportFactory(securityManager.getDatabasePassphraseBytes())
+            SupportOpenHelperFactory(securityManager.getDatabasePassphraseBytes())
         )
 
         val db = builder.build()
