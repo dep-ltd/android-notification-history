@@ -16,9 +16,11 @@ import com.depsoftware.notifhistory.R
 fun LockScreen(
     remainingAttempts: Int,
     showBiometric: Boolean,
-    onPinEntered: (String) -> Unit,
+    onPinEntered: (String) -> Boolean,
     onBiometricClick: () -> Unit
 ) {
+    var numpadKey by remember { mutableIntStateOf(0) }
+
     LaunchedEffect(showBiometric) {
         if (showBiometric) onBiometricClick()
     }
@@ -40,7 +42,15 @@ fun LockScreen(
             style = MaterialTheme.typography.bodyMedium
         )
         Spacer(modifier = Modifier.height(24.dp))
-        Numpad(onPinComplete = onPinEntered)
+        key(numpadKey) {
+            Numpad(
+                onPinComplete = { pin ->
+                    if (!onPinEntered(pin)) {
+                        numpadKey++
+                    }
+                }
+            )
+        }
         if (showBiometric) {
             Spacer(modifier = Modifier.height(24.dp))
             OutlinedButton(onClick = onBiometricClick) {

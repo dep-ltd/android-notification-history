@@ -32,6 +32,15 @@
     <string name="detail_no_text">No text</string>
     <string name="detail_open_link">Open link</string>
     <string name="detail_updated_at">Updated: %1$s</string>
+    <string name="detail_received_at">Received: %1$s</string>
+    <string name="detail_removed_at">Removed: %1$s</string>
+    <string name="detail_status_removed">Removed</string>
+    <string name="detail_message">Message</string>
+    <string name="detail_info">Details</string>
+    <string name="detail_attachments">Attachments</string>
+    <string name="detail_channel_label">Channel</string>
+    <string name="detail_package_label">Package</string>
+    <string name="detail_group_label">Group</string>
 
     <string name="settings_title">Settings</string>
     <string name="settings_section_apps">Apps</string>

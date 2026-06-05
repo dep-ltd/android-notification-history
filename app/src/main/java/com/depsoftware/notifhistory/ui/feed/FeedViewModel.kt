@@ -3,8 +3,6 @@ package com.depsoftware.notifhistory.ui.feed
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.depsoftware.notifhistory.data.entities.NotificationEvent
-import com.depsoftware.notifhistory.data.models.FeedListItem
-import com.depsoftware.notifhistory.data.models.NotificationFeedGrouper
 import com.depsoftware.notifhistory.data.repository.NotificationRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -12,7 +10,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
 @HiltViewModel
@@ -20,7 +17,6 @@ class FeedViewModel @Inject constructor(
     repository: NotificationRepository
 ) : ViewModel() {
 
-    private val expandedGroupKeys = MutableStateFlow<Set<String>>(emptySet())
     private val searchQuery = MutableStateFlow("")
     private val packageFilter = MutableStateFlow<String?>(null)
 
@@ -39,14 +35,14 @@ class FeedViewModel @Inject constructor(
         initialValue = false
     )
 
-    val feedItems: StateFlow<List<FeedListItem>> = combine(
+    val notifications: StateFlow<List<NotificationEvent>> = combine(
         repository.allNotifications,
         searchQuery,
-        packageFilter,
-        expandedGroupKeys
-    ) { events, query, pkg, expanded ->
-        val filtered = events.filter { event -> matchesFilters(event, query, pkg) }
-        NotificationFeedGrouper.group(filtered, expanded)
+        packageFilter
+    ) { events, query, pkg ->
+        events
+            .filter { event -> matchesFilters(event, query, pkg) }
+            .sortedByDescending { it.postedAt }
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -59,12 +55,6 @@ class FeedViewModel @Inject constructor(
 
     fun setPackageFilter(packageName: String?) {
         packageFilter.value = packageName
-    }
-
-    fun toggleGroup(groupKey: String) {
-        expandedGroupKeys.update { current ->
-            if (groupKey in current) current - groupKey else current + groupKey
-        }
     }
 
     private fun matchesFilters(

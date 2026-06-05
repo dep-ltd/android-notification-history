@@ -1,9 +1,5 @@
 package com.depsoftware.notifhistory.ui.feed
 
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -11,28 +7,22 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ExpandLess
-import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.NotificationsNone
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.depsoftware.notifhistory.R
 import com.depsoftware.notifhistory.data.entities.NotificationEvent
-import com.depsoftware.notifhistory.data.models.FeedListItem
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import com.depsoftware.notifhistory.data.entities.NotificationEventType
+import com.depsoftware.notifhistory.ui.components.AppIcon
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
@@ -45,7 +35,7 @@ fun FeedScreen(
     modifier: Modifier = Modifier,
     showSettingsInTopBar: Boolean = true
 ) {
-    val feedItems by viewModel.feedItems.collectAsState()
+    val notifications by viewModel.notifications.collectAsState()
     val packages by viewModel.availablePackages.collectAsState()
     val selectedPackage by viewModel.packageFilterState.collectAsState()
     val hasActiveFilters by viewModel.hasActiveFilters.collectAsState()
@@ -103,7 +93,7 @@ fun FeedScreen(
                     }
                 }
             }
-            if (feedItems.isEmpty()) {
+            if (notifications.isEmpty()) {
                 FeedEmptyState(
                     filtered = hasActiveFilters,
                     modifier = Modifier.weight(1f).fillMaxWidth()
@@ -115,129 +105,13 @@ fun FeedScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(
-                        items = feedItems,
-                        key = { item ->
-                            when (item) {
-                                is FeedListItem.Single -> "single-${item.event.id}"
-                                is FeedListItem.Group -> "group-${item.groupKey}"
-                            }
-                        }
-                    ) { item ->
-                        when (item) {
-                            is FeedListItem.Single -> NotificationItem(
-                                event = item.event,
-                                onClick = { onNotificationClick(item.event.id) }
-                            )
-                            is FeedListItem.Group -> GroupFeedItem(
-                                item = item,
-                                onToggle = { viewModel.toggleGroup(item.groupKey) },
-                                onEventClick = onNotificationClick
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun GroupFeedItem(
-    item: FeedListItem.Group,
-    onToggle: () -> Unit,
-    onEventClick: (Long) -> Unit
-) {
-    val newest = item.events.first()
-    val appLabel = newest.appLabel ?: newest.packageName
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onEventClick(newest.id) },
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    modifier = Modifier.weight(1f),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    AppIcon(packageName = newest.packageName, size = 22.dp)
-                    Column {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            Text(
-                                text = appLabel,
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                            Surface(
-                                shape = MaterialTheme.shapes.small,
-                                color = MaterialTheme.colorScheme.primaryContainer
-                            ) {
-                                Text(
-                                    text = "${item.events.size}",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp)
-                                )
-                            }
-                        }
-                        Text(
-                            text = newest.title ?: stringResource(R.string.detail_no_title),
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.SemiBold
+                        items = notifications,
+                        key = { it.id }
+                    ) { event ->
+                        NotificationItem(
+                            event = event,
+                            onClick = { onNotificationClick(event.id) }
                         )
-                        if (!newest.text.isNullOrBlank()) {
-                            Text(
-                                text = newest.text,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                maxLines = 1
-                            )
-                        }
-                    }
-                }
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        text = formatTime(newest.postedAt),
-                        style = MaterialTheme.typography.labelSmall
-                    )
-                    IconButton(onClick = onToggle, modifier = Modifier.size(36.dp)) {
-                        Icon(
-                            imageVector = if (item.isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                            contentDescription = stringResource(
-                                if (item.isExpanded) R.string.feed_collapse_group else R.string.feed_expand_group
-                            )
-                        )
-                    }
-                }
-            }
-            AnimatedVisibility(visible = item.isExpanded) {
-                Column(
-                    modifier = Modifier.padding(top = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    item.events.forEach { event ->
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { onEventClick(event.id) },
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant
-                            )
-                        ) {
-                            Box(modifier = Modifier.padding(12.dp)) {
-                                NotificationItemContent(event)
-                            }
-                        }
                     }
                 }
             }
@@ -249,7 +123,7 @@ private fun GroupFeedItem(
 fun NotificationItem(event: NotificationEvent, onClick: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Box(modifier = Modifier.padding(16.dp)) {
             NotificationItemContent(event)
@@ -260,6 +134,7 @@ fun NotificationItem(event: NotificationEvent, onClick: () -> Unit) {
 @Composable
 private fun NotificationItemContent(event: NotificationEvent) {
     val removed = event.removedAt != null
+    val eventType = NotificationEventType.fromStored(event.eventType)
     Column {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -268,9 +143,9 @@ private fun NotificationItemContent(event: NotificationEvent) {
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                AppIcon(packageName = event.packageName, size = 18.dp)
+                AppIcon(packageName = event.packageName, size = 20.dp)
                 Text(
                     text = event.appLabel ?: event.packageName,
                     style = MaterialTheme.typography.labelMedium,
@@ -278,59 +153,49 @@ private fun NotificationItemContent(event: NotificationEvent) {
                 )
             }
             Text(
-                text = formatTime(event.postedAt),
-                style = MaterialTheme.typography.labelSmall
+                text = formatFeedTime(event.postedAt),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = event.title ?: stringResource(R.string.detail_no_title),
             style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
+            fontWeight = FontWeight.SemiBold,
             textDecoration = if (removed) TextDecoration.LineThrough else null
         )
+        Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = event.text ?: stringResource(R.string.detail_no_text),
             style = MaterialTheme.typography.bodyMedium,
-            maxLines = 2,
+            maxLines = 3,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             textDecoration = if (removed) TextDecoration.LineThrough else null
         )
-        if (event.eventType == "UPDATED") {
-            Text(
-                text = stringResource(R.string.feed_updated_badge),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.tertiary
-            )
-        }
-    }
-}
-
-@Composable
-private fun AppIcon(packageName: String, size: Dp = 18.dp) {
-    val context = LocalContext.current
-    val icon by produceState<ImageBitmap?>(initialValue = null, key1 = packageName) {
-        value = withContext(Dispatchers.Default) {
-            try {
-                val d = context.packageManager.getApplicationIcon(packageName)
-                val w = d.intrinsicWidth.coerceIn(1, 192)
-                val h = d.intrinsicHeight.coerceIn(1, 192)
-                val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
-                Canvas(bmp).also { c -> d.setBounds(0, 0, w, h); d.draw(c) }
-                bmp.asImageBitmap()
-            } catch (_: Exception) {
-                null
+        if (eventType == NotificationEventType.UPDATED || removed) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (eventType == NotificationEventType.UPDATED) {
+                    AssistChip(
+                        onClick = {},
+                        enabled = false,
+                        label = { Text(stringResource(R.string.feed_updated_badge)) }
+                    )
+                }
+                if (removed) {
+                    AssistChip(
+                        onClick = {},
+                        enabled = false,
+                        label = { Text(stringResource(R.string.detail_status_removed)) },
+                        colors = AssistChipDefaults.assistChipColors(
+                            disabledContainerColor = MaterialTheme.colorScheme.errorContainer,
+                            disabledLabelColor = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                    )
+                }
             }
         }
-    }
-    val img = icon
-    if (img != null) {
-        Image(
-            bitmap = img,
-            contentDescription = null,
-            modifier = Modifier.size(size)
-        )
-    } else {
-        Spacer(Modifier.size(size))
     }
 }
 
@@ -366,7 +231,16 @@ private fun FeedEmptyState(filtered: Boolean, modifier: Modifier = Modifier) {
     }
 }
 
-private fun formatTime(timestamp: Long): String {
-    val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
-    return sdf.format(Date(timestamp))
+private fun formatFeedTime(timestamp: Long): String {
+    val now = Calendar.getInstance()
+    val posted = Calendar.getInstance().apply { timeInMillis = timestamp }
+    val pattern = if (
+        now.get(Calendar.YEAR) == posted.get(Calendar.YEAR) &&
+        now.get(Calendar.DAY_OF_YEAR) == posted.get(Calendar.DAY_OF_YEAR)
+    ) {
+        "HH:mm"
+    } else {
+        "dd MMM, HH:mm"
+    }
+    return SimpleDateFormat(pattern, Locale.getDefault()).format(Date(timestamp))
 }

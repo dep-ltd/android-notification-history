@@ -27,11 +27,18 @@ fun PinDots(pinLength: Int, modifier: Modifier = Modifier) {
 @Composable
 fun Numpad(
     enabled: Boolean = true,
+    autoSubmitOnComplete: Boolean = true,
     onPinComplete: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var pin by remember { mutableStateOf("") }
-    val keys = listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "C", "0", "OK")
+    val keys = listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "C", "0", "")
+
+    LaunchedEffect(pin, enabled, autoSubmitOnComplete) {
+        if (enabled && autoSubmitOnComplete && pin.length == 6) {
+            onPinComplete(pin)
+        }
+    }
 
     Column(modifier = modifier, horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally) {
         PinDots(pin.length)
@@ -44,23 +51,13 @@ fun Numpad(
         ) {
             items(keys) { key ->
                 when (key) {
+                    "" -> Spacer(modifier = Modifier.aspectRatio(1f))
                     "C" -> Button(
                         onClick = { if (enabled && pin.isNotEmpty()) pin = pin.dropLast(1) },
                         enabled = enabled,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.errorContainer,
                             contentColor = MaterialTheme.colorScheme.onErrorContainer
-                        ),
-                        modifier = Modifier.aspectRatio(1f)
-                    ) {
-                        Text(key, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                    }
-                    "OK" -> Button(
-                        onClick = { if (enabled && pin.length == 6) onPinComplete(pin) },
-                        enabled = enabled && pin.length == 6,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary
                         ),
                         modifier = Modifier.aspectRatio(1f)
                     ) {

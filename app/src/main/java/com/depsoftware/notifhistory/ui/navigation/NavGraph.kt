@@ -128,11 +128,13 @@ fun AppNavGraph(
                 remainingAttempts = remaining,
                 showBiometric = authManager.isBiometricEnabled() && BiometricGate.canAuthenticate(activity),
                 onPinEntered = { pin ->
-                    if (authManager.checkPin(pin)) {
+                    val success = authManager.checkPin(pin)
+                    if (success) {
                         navController.navigate("feed") {
                             popUpTo("lock") { inclusive = true }
                         }
                     }
+                    success
                 },
                 onBiometricClick = {
                     BiometricGate.authenticate(

@@ -33,6 +33,15 @@
     <string name="detail_no_text">Без тексту</string>
     <string name="detail_open_link">Відкрити посилання</string>
     <string name="detail_updated_at">Оновлено: %1$s</string>
+    <string name="detail_received_at">Отримано: %1$s</string>
+    <string name="detail_removed_at">Видалено: %1$s</string>
+    <string name="detail_status_removed">Видалено</string>
+    <string name="detail_message">Повідомлення</string>
+    <string name="detail_info">Деталі</string>
+    <string name="detail_attachments">Вкладення</string>
+    <string name="detail_channel_label">Канал</string>
+    <string name="detail_package_label">Пакет</string>
+    <string name="detail_group_label">Група</string>
 
     <string name="settings_title">Налаштування</string>
     <string name="settings_section_apps">Додатки</string>
