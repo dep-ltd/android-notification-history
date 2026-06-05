@@ -60,6 +60,7 @@ class DatabaseHolder @Inject constructor(
     }
 
     private fun buildDatabase(): AppDatabase {
+        System.loadLibrary("sqlcipher")
         val builder = Room.databaseBuilder(
             context,
             AppDatabase::class.java,

@@ -5,6 +5,9 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -40,19 +43,36 @@ fun Numpad(
             modifier = Modifier.width(280.dp)
         ) {
             items(keys) { key ->
-                Button(
-                    onClick = {
-                        if (!enabled) return@Button
-                        when (key) {
-                            "C" -> if (pin.isNotEmpty()) pin = pin.dropLast(1)
-                            "OK" -> if (pin.length == 6) onPinComplete(pin)
-                            else -> if (pin.length < 6) pin += key
-                        }
-                    },
-                    enabled = enabled,
-                    modifier = Modifier.aspectRatio(1f)
-                ) {
-                    Text(key, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                when (key) {
+                    "C" -> Button(
+                        onClick = { if (enabled && pin.isNotEmpty()) pin = pin.dropLast(1) },
+                        enabled = enabled,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer,
+                            contentColor = MaterialTheme.colorScheme.onErrorContainer
+                        ),
+                        modifier = Modifier.aspectRatio(1f)
+                    ) {
+                        Text(key, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    }
+                    "OK" -> Button(
+                        onClick = { if (enabled && pin.length == 6) onPinComplete(pin) },
+                        enabled = enabled && pin.length == 6,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        ),
+                        modifier = Modifier.aspectRatio(1f)
+                    ) {
+                        Text(key, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    }
+                    else -> OutlinedButton(
+                        onClick = { if (enabled && pin.length < 6) pin += key },
+                        enabled = enabled,
+                        modifier = Modifier.aspectRatio(1f)
+                    ) {
+                        Text(key, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
         }
