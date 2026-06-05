@@ -4,8 +4,8 @@ import androidx.room.TypeConverter
 
 class StringListConverter {
     @TypeConverter
-    fun fromPaths(paths: List<String>?): String? {
-        if (paths.isNullOrEmpty()) return null
+    fun fromPaths(paths: List<String>?): String {
+        if (paths.isNullOrEmpty()) return ""
         return paths.joinToString(PATH_SEPARATOR)
     }
 
