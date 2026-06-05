@@ -90,15 +90,10 @@ class NotificationRepository @Inject constructor(
             incoming.copy(eventType = NotificationEventType.POSTED.name)
         }
 
-        val rowId = if (existing != null) {
+        if (existing != null) {
             notificationDao.update(toSave)
-            existing.id
         } else {
             notificationDao.insert(toSave)
-        }
-
-        if (toSave.groupKey != null && !toSave.isGroupSummary) {
-            linkChildToSummary(notificationDao, rowId, toSave.packageName, toSave.groupKey)
         }
     }
 
@@ -112,18 +107,6 @@ class NotificationRepository @Inject constructor(
                 eventType = NotificationEventType.REMOVED.name
             )
         )
-    }
-
-    private suspend fun linkChildToSummary(
-        notificationDao: NotificationDao,
-        childId: Long,
-        packageName: String,
-        groupKey: String
-    ) {
-        val summary = notificationDao.getSummaryByGroup(packageName, groupKey) ?: return
-        val child = notificationDao.getById(childId) ?: return
-        if (child.summaryId == summary.id) return
-        notificationDao.update(child.copy(summaryId = summary.id))
     }
 
     private fun mergeMediaPaths(existing: List<String>, incoming: List<String>): List<String> {

@@ -1,7 +1,6 @@
 package com.depsoftware.notifhistory.data.models
 
 import com.depsoftware.notifhistory.data.entities.NotificationEvent
-import com.depsoftware.notifhistory.data.entities.hasDisplayableContent
 
 object NotificationFeedGrouper {
 
@@ -11,59 +10,30 @@ object NotificationFeedGrouper {
     ): List<FeedListItem> {
         if (events.isEmpty()) return emptyList()
 
-        val consumed = mutableSetOf<Long>()
         val items = mutableListOf<FeedListItem>()
+        val withGroupKey = events.filter { !it.groupKey.isNullOrBlank() }
+        val noGroupKey = events.filter { it.groupKey.isNullOrBlank() }
 
-        val groupKeys = events.mapNotNull { it.groupKey }.distinct()
-        for (groupKey in groupKeys) {
-            val inGroup = events.filter { it.groupKey == groupKey }
-            if (inGroup.isEmpty()) continue
-
-            val children = inGroup
-                .filter { !it.isGroupSummary }
-                .sortedByDescending { it.postedAt }
-            val summary = inGroup
-                .find { it.isGroupSummary && it.hasDisplayableContent() }
-
-            if (children.isEmpty() && summary == null) {
-                inGroup.filter { it.isGroupSummary }.forEach { summaryOnly ->
-                    if (summaryOnly.id !in consumed) {
-                        items.add(FeedListItem.Single(summaryOnly))
-                        consumed.add(summaryOnly.id)
-                    }
-                }
-                continue
-            }
-
-            if (children.isEmpty() && summary != null) {
-                items.add(
-                    FeedListItem.Group(
-                        groupKey = groupKey,
-                        summary = summary,
-                        children = emptyList(),
-                        isExpanded = groupKey in expandedGroupKeys
+        // Notifications with a groupKey: collapse into a Group only when 2+ exist
+        withGroupKey
+            .groupBy { it.groupKey!! }
+            .forEach { (groupKey, grouped) ->
+                val sorted = grouped.sortedByDescending { it.postedAt }
+                if (sorted.size == 1) {
+                    items.add(FeedListItem.Single(sorted.first()))
+                } else {
+                    items.add(
+                        FeedListItem.Group(
+                            groupKey = groupKey,
+                            events = sorted,
+                            isExpanded = groupKey in expandedGroupKeys
+                        )
                     )
-                )
-                consumed.addAll(inGroup.map { it.id })
-                continue
+                }
             }
 
-            if (children.isEmpty()) continue
-
-            items.add(
-                FeedListItem.Group(
-                    groupKey = groupKey,
-                    summary = summary,
-                    children = children,
-                    isExpanded = groupKey in expandedGroupKeys
-                )
-            )
-            consumed.addAll(inGroup.map { it.id })
-        }
-
-        events.filter { it.id !in consumed }.forEach { event ->
-            items.add(FeedListItem.Single(event))
-        }
+        // Notifications without a groupKey are always shown individually
+        noGroupKey.forEach { items.add(FeedListItem.Single(it)) }
 
         return items.sortedByDescending { it.sortKey }
     }

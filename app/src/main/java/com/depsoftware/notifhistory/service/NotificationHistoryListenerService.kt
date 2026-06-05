@@ -1,6 +1,6 @@
 package com.depsoftware.notifhistory.service
 
-import android.graphics.Bitmap
+import android.app.Notification
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import com.depsoftware.notifhistory.data.preferences.SettingsManager
@@ -16,17 +16,10 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class NotificationHistoryListenerService : NotificationListenerService() {
 
-    @Inject
-    lateinit var repository: NotificationRepository
-
-    @Inject
-    lateinit var parser: NotificationParser
-
-    @Inject
-    lateinit var settingsManager: SettingsManager
-
-    @Inject
-    lateinit var authManager: AuthManager
+    @Inject lateinit var repository: NotificationRepository
+    @Inject lateinit var parser: NotificationParser
+    @Inject lateinit var settingsManager: SettingsManager
+    @Inject lateinit var authManager: AuthManager
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -61,11 +54,12 @@ class NotificationHistoryListenerService : NotificationListenerService() {
     private fun handleNotification(sbn: StatusBarNotification) {
         if (!authManager.isPinSet()) return
         if (settingsManager.isBlacklisted(sbn.packageName)) return
+        // Group summary is a synthetic aggregation entry — skip it; we store individual pushes only
+        if (sbn.notification.flags and Notification.FLAG_GROUP_SUMMARY != 0) return
 
         val event = parser.parse(
             sbn = sbn,
-            appLabel = resolveAppLabel(sbn.packageName),
-            smallIconBitmap = extractSmallIconBitmap(sbn)
+            appLabel = resolveAppLabel(sbn.packageName)
         )
 
         serviceScope.launch {
@@ -77,16 +71,6 @@ class NotificationHistoryListenerService : NotificationListenerService() {
         return try {
             val info = packageManager.getApplicationInfo(packageName, 0)
             packageManager.getApplicationLabel(info).toString()
-        } catch (_: Exception) {
-            null
-        }
-    }
-
-    private fun extractSmallIconBitmap(sbn: StatusBarNotification): Bitmap? {
-        val icon = sbn.notification.smallIcon ?: return null
-        return try {
-            val drawable = icon.loadDrawable(this) ?: return null
-            NotificationParser.bitmapFromDrawable(drawable)
         } catch (_: Exception) {
             null
         }

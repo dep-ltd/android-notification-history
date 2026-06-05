@@ -9,12 +9,12 @@ sealed class FeedListItem {
         override val sortKey: Long = event.postedAt
     }
 
+    // events are sorted newest-first; shown as a collapsible group in the feed.
     data class Group(
         val groupKey: String,
-        val summary: NotificationEvent?,
-        val children: List<NotificationEvent>,
+        val events: List<NotificationEvent>,
         val isExpanded: Boolean
     ) : FeedListItem() {
-        override val sortKey: Long = (summary?.postedAt ?: children.maxOfOrNull { it.postedAt } ?: 0L)
+        override val sortKey: Long = events.maxOfOrNull { it.postedAt } ?: 0L
     }
 }
