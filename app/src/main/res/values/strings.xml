@@ -62,8 +62,10 @@
     <string name="pin_setup_create">Create a 6-digit PIN</string>
     <string name="pin_setup_confirm">Confirm your PIN</string>
     <string name="pin_setup_mismatch">PINs do not match. Try again.</string>
+    <string name="pin_setup_device_pin_warning">Do not use the same PIN as your device screen lock. If someone learns your phone PIN, they could also access this app.</string>
 
     <string name="lock_enter_pin">Enter PIN</string>
+    <string name="lock_pin_reentry_required">PIN required — biometric unlock is temporarily unavailable.</string>
     <string name="lock_attempts_left">Attempts left: %1$d</string>
     <string name="lock_use_biometric">Use biometric</string>
 
@@ -83,10 +85,13 @@
     <string name="settings_clear_history_message">This permanently removes all saved notifications and images on this device.</string>
     <string name="settings_clear_history_confirm">Delete</string>
     <string name="settings_clear_history_cancel">Cancel</string>
-    <string name="settings_lock_timeout">Auto-lock after background</string>
-    <string name="settings_lock_immediate">Immediately</string>
-    <string name="settings_lock_1min">1 minute</string>
-    <string name="settings_lock_5min">5 minutes</string>
+    <string name="settings_pin_reentry">Require PIN periodically</string>
+    <string name="settings_pin_reentry_hint">After this interval, biometric unlock is disabled until you enter your PIN.</string>
+    <string name="settings_pin_reentry_off">Off</string>
+    <string name="settings_pin_reentry_1h">1 hour</string>
+    <string name="settings_pin_reentry_8h">8 hours</string>
+    <string name="settings_pin_reentry_24h">24 hours</string>
+    <string name="settings_pin_reentry_48h">48 hours</string>
     <string name="settings_section_security">Security</string>
     <string name="settings_biometric">Unlock with biometric</string>
     <string name="settings_biometric_hint">Use fingerprint or face when available.</string>

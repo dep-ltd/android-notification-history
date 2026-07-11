@@ -1,6 +1,8 @@
 package com.depsoftware.notifhistory.ui.settings
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -27,10 +29,12 @@ import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.depsoftware.notifhistory.R
+import com.depsoftware.notifhistory.security.AppSessionManager
 import com.depsoftware.notifhistory.security.AuthManager
 import com.depsoftware.notifhistory.security.BiometricGate
 import com.depsoftware.notifhistory.ui.adaptive.SettingsSection
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SettingsPanel(
     section: SettingsSection? = null,
@@ -43,7 +47,7 @@ fun SettingsPanel(
     var biometricEnabled by remember { mutableStateOf(authManager.isBiometricEnabled()) }
     val canUseBiometric = BiometricGate.canAuthenticate(activity)
     val retentionDays by viewModel.retentionDays.collectAsState()
-    val lockTimeout by viewModel.lockTimeoutMinutes.collectAsState()
+    val pinReentryHours by viewModel.pinReentryHours.collectAsState()
     var showClearDialog by remember { mutableStateOf(false) }
 
     val showSecurity = section == null || section == SettingsSection.SECURITY
@@ -119,24 +123,32 @@ fun SettingsPanel(
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = stringResource(R.string.settings_lock_timeout),
+                        text = stringResource(R.string.settings_pin_reentry),
                         style = MaterialTheme.typography.titleMedium
                     )
-                    val options = listOf(0, 1, 5)
-                    Row(
+                    Text(
+                        text = stringResource(R.string.settings_pin_reentry_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                    FlowRow(
                         modifier = Modifier.padding(top = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        options.forEach { minutes ->
+                        AppSessionManager.PIN_REENTRY_OPTIONS.forEach { hours ->
                             FilterChip(
-                                selected = lockTimeout == minutes,
-                                onClick = { viewModel.setLockTimeoutMinutes(minutes) },
+                                selected = pinReentryHours == hours,
+                                onClick = { viewModel.setPinReentryHours(hours) },
                                 label = {
                                     Text(
-                                        when (minutes) {
-                                            0 -> stringResource(R.string.settings_lock_immediate)
-                                            1 -> stringResource(R.string.settings_lock_1min)
-                                            else -> stringResource(R.string.settings_lock_5min)
+                                        when (hours) {
+                                            0 -> stringResource(R.string.settings_pin_reentry_off)
+                                            1 -> stringResource(R.string.settings_pin_reentry_1h)
+                                            8 -> stringResource(R.string.settings_pin_reentry_8h)
+                                            24 -> stringResource(R.string.settings_pin_reentry_24h)
+                                            else -> stringResource(R.string.settings_pin_reentry_48h)
                                         }
                                     )
                                 }

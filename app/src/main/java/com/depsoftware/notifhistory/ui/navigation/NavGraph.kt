@@ -52,7 +52,6 @@ fun AppNavGraph(
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
                 hasListenerAccess = NotificationAccess.isListenerEnabled(context)
-                sessionManager.lockIfTimedOut()
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -124,9 +123,14 @@ fun AppNavGraph(
         }
         composable("lock") {
             val remaining = authManager.getRemainingAttempts()
+            val pinReentryRequired = sessionManager.requiresPinReentry()
+            val showBiometric = !pinReentryRequired &&
+                authManager.isBiometricEnabled() &&
+                BiometricGate.canAuthenticate(activity)
             LockScreen(
                 remainingAttempts = remaining,
-                showBiometric = authManager.isBiometricEnabled() && BiometricGate.canAuthenticate(activity),
+                showBiometric = showBiometric,
+                pinReentryRequired = pinReentryRequired,
                 onPinEntered = { pin ->
                     val success = authManager.checkPin(pin)
                     if (success) {

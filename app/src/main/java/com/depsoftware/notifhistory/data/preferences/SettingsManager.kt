@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.depsoftware.notifhistory.security.AppSessionManager
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -24,7 +25,7 @@ class SettingsManager @Inject constructor(
     private val dataStore = context.settingsDataStore
     private val blacklistKey = stringSetPreferencesKey("blacklist")
     private val retentionDaysKey = intPreferencesKey("retention_days")
-    private val lockTimeoutMinutesKey = intPreferencesKey("lock_timeout_minutes")
+    private val pinReentryHoursKey = intPreferencesKey("pin_reentry_hours")
 
     val blacklistFlow: Flow<Set<String>> = dataStore.data.map { prefs ->
         prefs[blacklistKey] ?: emptySet()
@@ -34,8 +35,8 @@ class SettingsManager @Inject constructor(
         prefs[retentionDaysKey] ?: DEFAULT_RETENTION_DAYS
     }
 
-    val lockTimeoutMinutesFlow: Flow<Int> = dataStore.data.map { prefs ->
-        prefs[lockTimeoutMinutesKey] ?: 0
+    val pinReentryHoursFlow: Flow<Int> = dataStore.data.map { prefs ->
+        prefs[pinReentryHoursKey] ?: DEFAULT_PIN_REENTRY_HOURS
     }
 
     fun isBlacklisted(packageName: String): Boolean {
@@ -51,11 +52,14 @@ class SettingsManager @Inject constructor(
         }
     }
 
-    suspend fun getLockTimeoutMinutes(): Int = lockTimeoutMinutesFlow.first()
+    suspend fun getPinReentryHours(): Int = pinReentryHoursFlow.first()
 
-    suspend fun setLockTimeoutMinutes(minutes: Int) {
+    suspend fun setPinReentryHours(hours: Int) {
         dataStore.edit { prefs ->
-            prefs[lockTimeoutMinutesKey] = minutes.coerceIn(0, 60)
+            prefs[pinReentryHoursKey] = hours.coerceIn(
+                0,
+                AppSessionManager.MAX_PIN_REENTRY_HOURS
+            )
         }
     }
 
@@ -79,5 +83,6 @@ class SettingsManager @Inject constructor(
 
     companion object {
         const val DEFAULT_RETENTION_DAYS = 90
+        const val DEFAULT_PIN_REENTRY_HOURS = AppSessionManager.DEFAULT_PIN_REENTRY_HOURS
     }
 }

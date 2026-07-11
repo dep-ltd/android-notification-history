@@ -53,14 +53,14 @@ class AuthManager @Inject constructor(
             .putString(KEY_PIN_HASH, hashPin(pin))
             .putInt(KEY_FAILED_ATTEMPTS, 0)
             .apply()
-        sessionManager.unlock()
+        sessionManager.unlockWithPin()
     }
 
     fun checkPin(enteredPin: String): Boolean {
         val storedHash = authPrefs.getString(KEY_PIN_HASH, null) ?: return false
         return if (storedHash == hashPin(enteredPin)) {
             resetAttempts()
-            sessionManager.unlock()
+            sessionManager.unlockWithPin()
             true
         } else {
             registerFailedAttempt()
@@ -73,8 +73,9 @@ class AuthManager @Inject constructor(
     }
 
     fun registerBiometricSuccess() {
+        if (sessionManager.requiresPinReentry()) return
         resetAttempts()
-        sessionManager.unlock()
+        sessionManager.unlockWithBiometric()
     }
 
     fun acknowledgeWipeScreen() {

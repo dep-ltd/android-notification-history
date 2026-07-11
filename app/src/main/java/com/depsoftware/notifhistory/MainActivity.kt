@@ -42,17 +42,15 @@ class MainActivity : FragmentActivity() {
         )
 
         lifecycleScope.launch {
-            settingsManager.lockTimeoutMinutesFlow.collectLatest { minutes ->
-                sessionManager.setLockTimeoutMinutes(minutes)
+            settingsManager.pinReentryHoursFlow.collectLatest { hours ->
+                sessionManager.setPinReentryHours(hours)
             }
         }
 
         ProcessLifecycleOwner.get().lifecycle.addObserver(
             LifecycleEventObserver { _, event ->
-                when (event) {
-                    Lifecycle.Event.ON_STOP -> sessionManager.lockIfBackgrounded()
-                    Lifecycle.Event.ON_START -> sessionManager.lockIfTimedOut()
-                    else -> Unit
+                if (event == Lifecycle.Event.ON_STOP) {
+                    sessionManager.lockIfBackgrounded()
                 }
             }
         )

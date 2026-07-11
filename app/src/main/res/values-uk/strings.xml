@@ -63,8 +63,10 @@
     <string name="pin_setup_create">Створіть 6-значний PIN</string>
     <string name="pin_setup_confirm">Підтвердіть PIN</string>
     <string name="pin_setup_mismatch">PIN не збігаються. Спробуйте знову.</string>
+    <string name="pin_setup_device_pin_warning">Не використовуйте той самий PIN, що й для блокування екрана телефону. Якщо хтось дізнається PIN телефону, він зможе отримати доступ і до цього додатку.</string>
 
     <string name="lock_enter_pin">Введіть PIN</string>
+    <string name="lock_pin_reentry_required">Потрібен PIN — біометричне розблокування тимчасово недоступне.</string>
     <string name="lock_attempts_left">Залишилось спроб: %1$d</string>
     <string name="lock_use_biometric">Біометрія</string>
 
@@ -84,10 +86,13 @@
     <string name="settings_clear_history_message">Усі збережені сповіщення та зображення на пристрої будуть видалені безповоротно.</string>
     <string name="settings_clear_history_confirm">Видалити</string>
     <string name="settings_clear_history_cancel">Скасувати</string>
-    <string name="settings_lock_timeout">Блокування після фону</string>
-    <string name="settings_lock_immediate">Одразу</string>
-    <string name="settings_lock_1min">1 хвилина</string>
-    <string name="settings_lock_5min">5 хвилин</string>
+    <string name="settings_pin_reentry">Періодичне підтвердження PIN</string>
+    <string name="settings_pin_reentry_hint">Після цього інтервалу біометрія недоступна, доки не введете PIN.</string>
+    <string name="settings_pin_reentry_off">Вимкнути</string>
+    <string name="settings_pin_reentry_1h">1 година</string>
+    <string name="settings_pin_reentry_8h">8 годин</string>
+    <string name="settings_pin_reentry_24h">24 години</string>
+    <string name="settings_pin_reentry_48h">48 годин</string>
     <string name="settings_section_security">Безпека</string>
     <string name="settings_biometric">Розблокування біометрією</string>
     <string name="settings_biometric_hint">Відбиток або обличчя, якщо доступно.</string>

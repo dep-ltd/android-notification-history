@@ -16,6 +16,7 @@ import com.depsoftware.notifhistory.R
 fun LockScreen(
     remainingAttempts: Int,
     showBiometric: Boolean,
+    pinReentryRequired: Boolean = false,
     onPinEntered: (String) -> Boolean,
     onBiometricClick: () -> Unit
 ) {
@@ -35,6 +36,14 @@ fun LockScreen(
         Icon(Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(64.dp))
         Spacer(modifier = Modifier.height(16.dp))
         Text(stringResource(R.string.lock_enter_pin), style = MaterialTheme.typography.headlineMedium)
+        if (pinReentryRequired) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = stringResource(R.string.lock_pin_reentry_required),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = stringResource(R.string.lock_attempts_left, remainingAttempts),
