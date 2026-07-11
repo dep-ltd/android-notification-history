@@ -72,7 +72,12 @@ fun AppPickerScreen(
                         items(apps, key = { it.packageName }) { app ->
                             ListItem(
                                 headlineContent = { Text(app.label) },
-                                supportingContent = { Text(app.packageName) },
+                                supportingContent = {
+                                    Text(
+                                        text = app.packageName,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                },
                                 trailingContent = {
                                     Switch(
                                         checked = app.isBlacklisted,
@@ -112,6 +117,7 @@ fun AppPickerScreen(
                 Text(
                     text = stringResource(R.string.app_picker_title),
                     style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                 )
             }

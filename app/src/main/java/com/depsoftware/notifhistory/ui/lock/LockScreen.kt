@@ -33,9 +33,18 @@ fun LockScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Icon(Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(64.dp))
+        Icon(
+            Icons.Default.Lock,
+            contentDescription = null,
+            modifier = Modifier.size(64.dp),
+            tint = MaterialTheme.colorScheme.primary
+        )
         Spacer(modifier = Modifier.height(16.dp))
-        Text(stringResource(R.string.lock_enter_pin), style = MaterialTheme.typography.headlineMedium)
+        Text(
+            stringResource(R.string.lock_enter_pin),
+            style = MaterialTheme.typography.headlineMedium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
         if (pinReentryRequired) {
             Spacer(modifier = Modifier.height(8.dp))
             Text(

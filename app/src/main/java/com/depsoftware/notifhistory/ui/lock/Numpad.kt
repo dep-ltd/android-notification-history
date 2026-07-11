@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.sp
 fun PinDots(pinLength: Int, modifier: Modifier = Modifier) {
     Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         repeat(6) { index ->
-            Text(if (index < pinLength) "●" else "○", fontSize = 24.sp)
+            Text(if (index < pinLength) "●" else "○", fontSize = 24.sp, color = MaterialTheme.colorScheme.onSurface)
         }
     }
 }

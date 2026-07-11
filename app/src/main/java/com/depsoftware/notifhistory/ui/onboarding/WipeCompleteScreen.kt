@@ -32,7 +32,8 @@ fun WipeCompleteScreen(onContinue: () -> Unit) {
             Text(
                 text = stringResource(R.string.wipe_complete_title),
                 style = MaterialTheme.typography.headlineMedium,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurface
             )
             Spacer(modifier = Modifier.height(12.dp))
             Text(

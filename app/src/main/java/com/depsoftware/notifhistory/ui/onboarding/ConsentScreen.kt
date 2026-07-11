@@ -25,12 +25,18 @@ fun ConsentScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Icon(Icons.Default.Shield, contentDescription = null, modifier = Modifier.size(72.dp))
+        Icon(
+            Icons.Default.Shield,
+            contentDescription = null,
+            modifier = Modifier.size(72.dp),
+            tint = MaterialTheme.colorScheme.primary
+        )
         Spacer(modifier = Modifier.height(24.dp))
         Text(
             text = stringResource(R.string.consent_title),
             style = MaterialTheme.typography.headlineMedium,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurface
         )
         Spacer(modifier = Modifier.height(12.dp))
         Text(
@@ -44,7 +50,8 @@ fun ConsentScreen(
             Checkbox(checked = accepted, onCheckedChange = { accepted = it })
             Text(
                 text = stringResource(R.string.pin_setup_wipe_consent),
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
         Spacer(modifier = Modifier.height(24.dp))

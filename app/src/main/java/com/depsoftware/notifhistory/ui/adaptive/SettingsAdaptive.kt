@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
@@ -104,6 +105,7 @@ private fun SettingsSectionList(
         Text(
             text = stringResource(R.string.settings_title),
             style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(16.dp)
         )
         SettingsSection.entries.forEach { section ->
@@ -116,7 +118,14 @@ private fun SettingsSectionList(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 8.dp, vertical = 4.dp)
-                    .clickable { onSelect(section) }
+                    .clickable { onSelect(section) },
+                colors = CardDefaults.cardColors(
+                    containerColor = if (section == selected) {
+                        MaterialTheme.colorScheme.surfaceContainerHighest
+                    } else {
+                        MaterialTheme.colorScheme.surfaceContainerLow
+                    }
+                )
             ) {
                 ListItem(
                     headlineContent = {

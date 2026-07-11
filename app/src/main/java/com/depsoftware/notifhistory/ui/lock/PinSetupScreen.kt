@@ -31,7 +31,12 @@ fun PinSetupScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Icon(Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(64.dp))
+        Icon(
+            Icons.Default.Lock,
+            contentDescription = null,
+            modifier = Modifier.size(64.dp),
+            tint = MaterialTheme.colorScheme.primary
+        )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = if (step == 1) {
@@ -39,7 +44,8 @@ fun PinSetupScreen(
             } else {
                 stringResource(R.string.pin_setup_confirm)
             },
-            style = MaterialTheme.typography.headlineMedium
+            style = MaterialTheme.typography.headlineMedium,
+            color = MaterialTheme.colorScheme.onSurface
         )
         Spacer(modifier = Modifier.height(12.dp))
         Card(
@@ -64,6 +70,7 @@ fun PinSetupScreen(
             Text(
                 text = stringResource(R.string.pin_setup_wipe_consent),
                 style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f)
             )
         }

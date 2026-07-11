@@ -167,7 +167,7 @@ private fun DetailHeaderCard(item: NotificationEvent) {
 
     Card(
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
+            containerColor = MaterialTheme.colorScheme.primaryContainer
         )
     ) {
         Row(
@@ -182,23 +182,25 @@ private fun DetailHeaderCard(item: NotificationEvent) {
                 Text(
                     text = item.appLabel ?: item.packageName,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
                 Text(
                     text = item.packageName,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.75f)
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = stringResource(R.string.detail_received_at, formatDateTime(item.postedAt)),
-                    style = MaterialTheme.typography.labelMedium
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
                 item.updatedAt?.let { updated ->
                     Text(
                         text = stringResource(R.string.detail_updated_at, formatDateTime(updated)),
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.75f)
                     )
                 }
             }
@@ -207,10 +209,20 @@ private fun DetailHeaderCard(item: NotificationEvent) {
             Row(
                 modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp)
             ) {
-                AssistChip(
+                SuggestionChip(
                     onClick = {},
                     enabled = false,
-                    label = { Text(stringResource(R.string.feed_updated_badge)) }
+                    label = {
+                        Text(
+                            text = stringResource(R.string.feed_updated_badge),
+                            color = MaterialTheme.colorScheme.onTertiaryContainer
+                        )
+                    },
+                    colors = SuggestionChipDefaults.suggestionChipColors(
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                        disabledContainerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                        disabledLabelColor = MaterialTheme.colorScheme.onTertiaryContainer
+                    )
                 )
             }
         }
@@ -234,7 +246,8 @@ private fun DetailContentCard(item: NotificationEvent) {
             Text(
                 text = item.title ?: stringResource(R.string.detail_no_title),
                 style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = item.text ?: stringResource(R.string.detail_no_text),
@@ -249,7 +262,7 @@ private fun DetailContentCard(item: NotificationEvent) {
 private fun DetailMetaCard(item: NotificationEvent) {
     Card(
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
         )
     ) {
         Column(
@@ -293,7 +306,8 @@ private fun DetailMetaRow(label: String, value: String) {
         )
         Text(
             text = value,
-            style = MaterialTheme.typography.bodySmall
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface
         )
     }
 }

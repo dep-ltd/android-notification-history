@@ -48,7 +48,8 @@ fun RootWarningScreen(onExit: () -> Unit) {
             Button(
                 onClick = onExit,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.error
+                    containerColor = MaterialTheme.colorScheme.error,
+                    contentColor = MaterialTheme.colorScheme.onError
                 )
             ) {
                 Text(stringResource(R.string.root_warning_exit))
